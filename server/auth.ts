@@ -1,6 +1,6 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { Express } from "express";
+import { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
@@ -98,7 +98,7 @@ export function setupAuth(app: Express) {
 
   return {
     // Authentication middleware
-    requireAuth: (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
+    requireAuth: (req: Request, res: Response, next: NextFunction) => {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Not authenticated" });
       }
@@ -106,7 +106,7 @@ export function setupAuth(app: Express) {
     },
 
     // Admin middleware
-    requireAdmin: (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
+    requireAdmin: (req: Request, res: Response, next: NextFunction) => {
       if (!req.isAuthenticated() || !req.user?.isAdmin) {
         return res.status(403).json({ message: "Forbidden" });
       }

@@ -1,16 +1,40 @@
 import type { Express } from "express";
 import { createServer } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { insertContactSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth";
-import passport from 'passport'; // Assuming passport is used for authentication
+import passport from 'passport';
 
+// Store connected admin clients
+const adminClients = new Set<WebSocket>();
 
 export function registerRoutes(app: Express) {
   const httpServer = createServer(app);
   const { requireAuth, requireAdmin } = setupAuth(app);
+
+  // Setup WebSocket server
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+
+  wss.on('connection', (ws) => {
+    console.log('New WebSocket connection');
+    adminClients.add(ws);
+
+    ws.on('close', () => {
+      adminClients.delete(ws);
+    });
+  });
+
+  // Broadcast to all connected admin clients
+  function broadcastToAdmins(message: any) {
+    adminClients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(message));
+      }
+    });
+  }
 
   // Authentication routes
   app.post("/api/login", (req, res, next) => {
@@ -47,6 +71,12 @@ export function registerRoutes(app: Express) {
       // Store the message locally
       const message = await storage.createContactMessage(data);
       console.log("Stored message successfully:", message);
+
+      // Broadcast the new message to all connected admin clients
+      broadcastToAdmins({
+        type: 'new_message',
+        message
+      });
 
       // Return success response
       res.json({ 

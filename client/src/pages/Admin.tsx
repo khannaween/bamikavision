@@ -1,17 +1,57 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { formatDistanceToNow } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 import type { ContactMessage } from "@shared/schema";
 
 export default function Admin() {
   const [searchTerm, setSearchTerm] = useState("");
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
   const { data: messages = [], isLoading } = useQuery<ContactMessage[]>({
     queryKey: ["/api/contact/messages"],
   });
+
+  // WebSocket connection
+  useEffect(() => {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const socket = new WebSocket(wsUrl);
+
+    socket.onopen = () => {
+      console.log('Connected to WebSocket server');
+    };
+
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      if (data.type === 'new_message') {
+        // Show notification
+        toast({
+          title: "New Message",
+          description: `New message from ${data.message.name}`,
+        });
+
+        // Update messages in cache
+        queryClient.setQueryData<ContactMessage[]>(["/api/contact/messages"], (old = []) => {
+          return [data.message, ...old];
+        });
+      }
+    };
+
+    socket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, [toast, queryClient]);
 
   const filteredMessages = messages.filter((message) =>
     message.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
