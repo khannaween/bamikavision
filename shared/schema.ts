@@ -1,4 +1,4 @@
-import { pgTable, text, serial } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -7,9 +7,9 @@ export const contactMessages = pgTable("contact_messages", {
   name: text("name").notNull(),
   email: text("email").notNull(),
   message: text("message").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Update the schema with proper validation
 export const insertContactSchema = createInsertSchema(contactMessages, {
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email format"),
