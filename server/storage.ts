@@ -6,6 +6,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   createContactMessage(message: InsertContact): Promise<ContactMessage>;
+  getAllContactMessages(): Promise<ContactMessage[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -43,6 +44,10 @@ export class MemStorage implements IStorage {
     const contactMessage: ContactMessage = { id, ...message };
     this.contactMessages.set(id, contactMessage);
     return contactMessage;
+  }
+
+  async getAllContactMessages(): Promise<ContactMessage[]> {
+    return Array.from(this.contactMessages.values());
   }
 }
 

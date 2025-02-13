@@ -37,5 +37,16 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Get all contact messages (admin endpoint)
+  app.get("/api/contact/messages", async (_req, res) => {
+    try {
+      const messages = await storage.getAllContactMessages();
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
   return httpServer;
 }
