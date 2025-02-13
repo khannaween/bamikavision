@@ -10,8 +10,10 @@ import Contact from "@/pages/Contact";
 import Investors from "@/pages/Investors";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import Admin from "@/pages/Admin";
+import Auth from "@/pages/Auth";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 function Router() {
   return (
@@ -25,7 +27,8 @@ function Router() {
           <Route path="/contact" component={Contact} />
           <Route path="/investors" component={Investors} />
           <Route path="/privacy-policy" component={PrivacyPolicy} />
-          <Route path="/admin" component={Admin} />
+          <Route path="/auth" component={Auth} />
+          <ProtectedRoute path="/admin" component={Admin} />
           <Route component={NotFound} />
         </Switch>
       </main>

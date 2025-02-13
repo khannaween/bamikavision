@@ -4,9 +4,37 @@ import { storage } from "./storage";
 import { insertContactSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
+import { setupAuth } from "./auth";
+import passport from 'passport'; // Assuming passport is used for authentication
+
 
 export function registerRoutes(app: Express) {
   const httpServer = createServer(app);
+  const { requireAuth, requireAdmin } = setupAuth(app);
+
+  // Authentication routes
+  app.post("/api/login", (req, res, next) => {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ message: "Username and password are required" });
+    }
+    passport.authenticate("local", (err: any, user: any, info: any) => {
+      if (err) return next(err);
+      if (!user) {
+        return res.status(401).json({ message: info?.message || "Authentication failed" });
+      }
+      req.logIn(user, (err) => {
+        if (err) return next(err);
+        res.json({ message: "Logged in successfully", user });
+      });
+    })(req, res, next);
+  });
+
+  app.post("/api/logout", (req, res) => {
+    req.logout(() => {
+      res.json({ message: "Logged out successfully" });
+    });
+  });
 
   // Contact form submission
   app.post("/api/contact", async (req, res) => {
@@ -41,7 +69,7 @@ export function registerRoutes(app: Express) {
   });
 
   // Get all contact messages (admin endpoint)
-  app.get("/api/contact/messages", async (_req, res) => {
+  app.get("/api/contact/messages", requireAdmin, async (_req, res) => {
     try {
       const messages = await storage.getAllContactMessages();
       console.log("Fetching all messages:", messages);
@@ -50,6 +78,14 @@ export function registerRoutes(app: Express) {
       console.error("Error fetching messages:", error);
       res.status(500).json({ error: "Failed to fetch messages" });
     }
+  });
+
+  // Get current user
+  app.get("/api/user", (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    res.json(req.user);
   });
 
   return httpServer;
