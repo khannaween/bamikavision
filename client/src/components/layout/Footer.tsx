@@ -11,7 +11,7 @@ export default function Footer() {
               Transforming social connections through innovative technology
             </p>
           </div>
-          
+
           <div>
             <h3 className="text-lg font-semibold mb-4">Company</h3>
             <ul className="space-y-2">
@@ -50,9 +50,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-sm text-muted-foreground hover:text-foreground">
-                  Privacy Policy
-                </a>
+                <Link href="/privacy-policy">
+                  <a className="text-sm text-muted-foreground hover:text-foreground">
+                    Privacy Policy
+                  </a>
+                </Link>
               </li>
               <li>
                 <a href="#" className="text-sm text-muted-foreground hover:text-foreground">
