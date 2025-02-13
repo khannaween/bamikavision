@@ -13,10 +13,9 @@ export function registerRoutes(app: Express) {
       const data = insertContactSchema.parse(req.body);
       const message = await storage.createContactMessage(data);
 
+      // Professional email configuration for Gmail
       const transporter = nodemailer.createTransport({
-        host: "smtp.example.com", // Will be updated based on email provider
-        port: 587,
-        secure: false,
+        service: "gmail",
         auth: {
           user: "contact@bamikavision.com",
           pass: process.env.EMAIL_PASSWORD
@@ -28,6 +27,13 @@ export function registerRoutes(app: Express) {
         to: "contact@bamikavision.com",
         subject: "New Contact Form Submission",
         text: `Name: ${data.name}\nEmail: ${data.email}\nMessage: ${data.message}`,
+        html: `
+          <h2>New Contact Form Submission</h2>
+          <p><strong>Name:</strong> ${data.name}</p>
+          <p><strong>Email:</strong> ${data.email}</p>
+          <p><strong>Message:</strong></p>
+          <p>${data.message}</p>
+        `
       });
 
       res.json(message);
