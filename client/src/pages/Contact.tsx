@@ -64,7 +64,9 @@ export default function Contact() {
                 <Mail className="w-6 h-6 text-primary" />
                 <div>
                   <h3 className="font-medium">Email</h3>
-                  <p className="text-muted-foreground">contact@bamikavision.com</p>
+                  <p className="text-muted-foreground">
+                    {process.env.VITE_CONTACT_EMAIL || "your-email@example.com"}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-4">

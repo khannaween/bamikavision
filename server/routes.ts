@@ -12,21 +12,21 @@ export function registerRoutes(app: Express) {
     try {
       const data = insertContactSchema.parse(req.body);
       const message = await storage.createContactMessage(data);
-      
-      // In a real app, set up proper email credentials
+
+      // Configure with your actual email credentials
       const transporter = nodemailer.createTransport({
         host: "smtp.example.com",
         port: 587,
         secure: false,
         auth: {
-          user: "user@example.com",
-          pass: "password"
+          user: process.env.EMAIL_USER || "your-email@example.com", 
+          pass: process.env.EMAIL_PASSWORD || "your-password" 
         }
       });
 
       await transporter.sendMail({
-        from: '"Bamika Vision" <contact@bamikavision.com>',
-        to: "contact@bamikavision.com",
+        from: process.env.EMAIL_FROM || "Bamika Vision <your-email@example.com>", 
+        to: process.env.EMAIL_TO || "your-email@example.com", 
         subject: "New Contact Form Submission",
         text: `Name: ${data.name}\nEmail: ${data.email}\nMessage: ${data.message}`,
       });
