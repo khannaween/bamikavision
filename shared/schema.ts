@@ -9,7 +9,12 @@ export const contactMessages = pgTable("contact_messages", {
   message: text("message").notNull(),
 });
 
-export const insertContactSchema = createInsertSchema(contactMessages).pick({
+// Update the schema with proper validation
+export const insertContactSchema = createInsertSchema(contactMessages, {
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email format"),
+  message: z.string().min(1, "Message is required"),
+}).pick({
   name: true,
   email: true,
   message: true,
