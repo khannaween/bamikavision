@@ -74,22 +74,22 @@ export function setupAuth(app: Express) {
 
   // Create initial admin user if it doesn't exist
   const createAdminUser = async () => {
-    const adminUsername = "admin";
+    const adminUsername = "bamika";
     const existingAdmin = await storage.getUserByUsername(adminUsername);
-    
+
     if (!existingAdmin) {
-      const hashedPassword = await hashPassword("admin123"); // Default password
+      const hashedPassword = await hashPassword("Bamika$007"); // Custom password
       const adminUser = await storage.createUser({
         username: adminUsername,
         password: hashedPassword,
       });
-      
+
       // Set admin privilege (directly modify the user object since it's in memory)
       const user = await storage.getUser(adminUser.id);
       if (user) {
         user.isAdmin = true;
       }
-      
+
       console.log("Admin user created successfully");
     }
   };
