@@ -22,10 +22,12 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
-            <Link href="/" className="flex items-center">
-              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
-                Bamika Vision
-              </span>
+            <Link href="/">
+              <Button variant="ghost" className="flex items-center">
+                <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
+                  Bamika Vision
+                </span>
+              </Button>
             </Link>
           </div>
 
