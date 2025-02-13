@@ -65,7 +65,7 @@ export default function Contact() {
                 <div>
                   <h3 className="font-medium">Email</h3>
                   <p className="text-muted-foreground">
-                    {process.env.VITE_CONTACT_EMAIL || "your-email@example.com"}
+                    contact@bamikavision.com
                   </p>
                 </div>
               </div>
