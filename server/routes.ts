@@ -11,11 +11,14 @@ export function registerRoutes(app: Express) {
   // Contact form submission
   app.post("/api/contact", async (req, res) => {
     try {
+      console.log("Received contact form submission:", req.body);
+
       // Validate the request body
       const data = insertContactSchema.parse(req.body);
 
       // Store the message locally
       const message = await storage.createContactMessage(data);
+      console.log("Stored message successfully:", message);
 
       // Return success response
       res.json({ 
@@ -41,6 +44,7 @@ export function registerRoutes(app: Express) {
   app.get("/api/contact/messages", async (_req, res) => {
     try {
       const messages = await storage.getAllContactMessages();
+      console.log("Fetching all messages:", messages);
       res.json(messages);
     } catch (error) {
       console.error("Error fetching messages:", error);
