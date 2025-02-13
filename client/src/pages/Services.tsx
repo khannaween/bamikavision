@@ -18,14 +18,14 @@ export default function Services() {
           </p>
         </motion.div>
 
-        {/* Bamika Vibes App Showcase */}
+        {/* Platform Showcase */}
         <section className="mb-20">
           <Card>
             <CardContent className="p-8 grid md:grid-cols-2 gap-8 items-center">
               <div>
-                <h2 className="text-3xl font-bold mb-4">Bamika Vibes App</h2>
+                <h2 className="text-3xl font-bold mb-4">Social Platform</h2>
                 <p className="text-muted-foreground mb-6">
-                  Experience social connection like never before with our flagship app
+                  Experience social connection like never before with our innovative platform
                 </p>
                 <Button>
                   Learn More <ArrowRight className="ml-2" />

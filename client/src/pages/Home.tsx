@@ -36,7 +36,7 @@ export default function Home() {
               Revolutionizing Social Media with Bamika Vision
             </motion.h1>
             <p className="text-xl mb-8 max-w-2xl text-gray-300">
-              Experience the future of social connection with our innovative platform and Bamika Vibes app.
+              Experience the future of social connection through our innovative platform.
             </p>
             <div className="flex gap-4">
               <Link href="/contact">
