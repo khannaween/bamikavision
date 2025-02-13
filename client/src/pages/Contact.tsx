@@ -71,14 +71,14 @@ export default function Contact() {
                 <Phone className="w-6 h-6 text-primary" />
                 <div>
                   <h3 className="font-medium">Phone</h3>
-                  <p className="text-muted-foreground">+1 (555) 123-4567</p>
+                  <p className="text-muted-foreground">+1 437-772-6368</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <MapPin className="w-6 h-6 text-primary" />
                 <div>
                   <h3 className="font-medium">Location</h3>
-                  <p className="text-muted-foreground">San Francisco, CA</p>
+                  <p className="text-muted-foreground">Ontario, Canada</p>
                 </div>
               </div>
             </div>
