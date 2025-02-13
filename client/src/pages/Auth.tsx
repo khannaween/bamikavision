@@ -7,7 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
 const loginSchema = z.object({
@@ -20,7 +20,27 @@ type LoginData = z.infer<typeof loginSchema>;
 export default function Auth() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  
+
+  // Check if user is already logged in
+  const { data: user } = useQuery({
+    queryKey: ["/api/user"],
+    queryFn: async () => {
+      const res = await fetch("/api/user", { credentials: "include" });
+      if (!res.ok) {
+        if (res.status === 401) return null;
+        throw new Error("Failed to fetch user");
+      }
+      return res.json();
+    },
+  });
+
+  // Redirect to admin if already logged in
+  useEffect(() => {
+    if (user) {
+      setLocation("/admin");
+    }
+  }, [user, setLocation]);
+
   const form = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -39,7 +59,8 @@ export default function Auth() {
         title: "Success",
         description: "Logged in successfully",
       });
-      setLocation("/admin");
+      // Force reload user data and trigger the useEffect
+      window.location.href = "/admin";
     },
     onError: (error: Error) => {
       toast({
