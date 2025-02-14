@@ -35,7 +35,7 @@ export function registerRoutes(app: Express): Server {
     });
   });
 
-  // Contact form submission endpoint - made public and independent of session
+  // Contact form submission endpoint with enhanced logging
   app.post("/api/contact", async (req, res) => {
     console.log('Contact form request received:', {
       method: req.method,
@@ -45,23 +45,24 @@ export function registerRoutes(app: Express): Server {
     });
 
     try {
+      // Validate request body exists
       if (!req.body || typeof req.body !== 'object') {
         console.error('[Contact Form] Invalid request body:', req.body);
         return res.status(400).json({
           success: false,
-          error: 'Invalid request body'
+          message: 'Invalid request body'
         });
       }
 
-      // Validate the request body
-      const data = insertContactSchema.parse(req.body);
-      console.log("[Contact Form] Validation passed:", data);
+      // Validate the request body against schema
+      const validatedData = insertContactSchema.parse(req.body);
+      console.log("[Contact Form] Validation passed:", validatedData);
 
       // Store the message
-      const message = await storage.createContactMessage(data);
+      const message = await storage.createContactMessage(validatedData);
       console.log("[Contact Form] Message stored:", message);
 
-      // Try to broadcast but don't fail if it doesn't work
+      // Notify admin clients via WebSocket
       try {
         broadcastToAdmins({
           type: 'new_message',
@@ -73,40 +74,33 @@ export function registerRoutes(app: Express): Server {
       }
 
       // Return success response
-      const response = {
+      res.status(201).json({
         success: true,
         message: "Message received successfully",
         data: message
-      };
-      console.log('[Contact Form] Sending success response:', response);
-      return res.status(200).json(response);
+      });
 
     } catch (error) {
-      console.error("[Contact Form] Error processing request:", error);
+      console.error("[Contact Form] Error processing request:", {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
 
       if (error instanceof ZodError) {
         const validationError = fromZodError(error);
-        console.error('[Contact Form] Validation error:', validationError);
         return res.status(400).json({
           success: false,
-          error: "Validation error",
+          message: "Validation error",
           details: validationError.message
         });
       }
 
-      // Log the full error details
-      console.error('[Contact Form] Unexpected error:', {
-        error: error,
-        stack: error instanceof Error ? error.stack : undefined,
-        message: error instanceof Error ? error.message : String(error)
-      });
-
       return res.status(500).json({
         success: false,
-        error: "An unexpected error occurred",
-        message: process.env.NODE_ENV === 'development' ? 
-          (error instanceof Error ? error.message : String(error)) : 
-          'Internal server error'
+        message: process.env.NODE_ENV === 'production' 
+          ? 'An unexpected error occurred' 
+          : error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
@@ -118,7 +112,10 @@ export function registerRoutes(app: Express): Server {
       res.json(messages);
     } catch (error) {
       console.error("[Contact Messages] Error fetching messages:", error);
-      res.status(500).json({ error: "Failed to fetch messages" });
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch messages" 
+      });
     }
   });
 
