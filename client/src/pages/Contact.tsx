@@ -25,18 +25,30 @@ export default function Contact() {
   const mutation = useMutation({
     mutationFn: async (data: InsertContact) => {
       try {
+        console.log('Sending contact form data:', data);
         const response = await apiRequest("POST", "/api/contact", data);
         const result = await response.json();
+        console.log('Contact form response:', result);
+
         if (!result.success) {
           throw new Error(result.message || result.error || 'Failed to send message');
         }
         return result;
       } catch (error: any) {
         console.error('Contact form error:', error);
+        // Log the full error details
+        if (error.response) {
+          console.error('Error response:', {
+            status: error.response.status,
+            headers: error.response.headers,
+            data: error.response.data
+          });
+        }
         throw new Error(error.message || 'Failed to send message');
       }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      console.log('Contact form success:', result);
       toast({
         title: "Success!",
         description: "Your message has been sent. We'll get back to you soon.",
@@ -44,6 +56,7 @@ export default function Contact() {
       form.reset();
     },
     onError: (error: Error) => {
+      console.error('Contact form mutation error:', error);
       toast({
         title: "Error sending message",
         description: error.message || "Please try again later.",
@@ -146,7 +159,11 @@ export default function Contact() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" disabled={mutation.isPending}>
+                <Button 
+                  type="submit" 
+                  disabled={mutation.isPending}
+                  className="w-full"
+                >
                   {mutation.isPending ? "Sending..." : "Send Message"}
                 </Button>
               </form>

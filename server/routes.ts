@@ -35,53 +35,83 @@ export function registerRoutes(app: Express): Server {
     });
   });
 
-  // Contact form submission with enhanced error handling and logging
+  // Contact form submission endpoint - made public and independent of session
   app.post("/api/contact", async (req, res) => {
+    console.log('Contact form request received:', {
+      method: req.method,
+      headers: req.headers,
+      body: req.body,
+      url: req.url
+    });
+
     try {
-      console.log("[Contact Form] Request headers:", req.headers);
-      console.log("[Contact Form] Request body:", req.body);
+      if (!req.body || typeof req.body !== 'object') {
+        console.error('[Contact Form] Invalid request body:', req.body);
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid request body'
+        });
+      }
 
       // Validate the request body
       const data = insertContactSchema.parse(req.body);
       console.log("[Contact Form] Validation passed:", data);
 
-      // Store the message locally
+      // Store the message
       const message = await storage.createContactMessage(data);
       console.log("[Contact Form] Message stored:", message);
 
-      // Broadcast the new message to all connected admin clients
-      broadcastToAdmins({
-        type: 'new_message',
-        message
-      });
+      // Try to broadcast but don't fail if it doesn't work
+      try {
+        broadcastToAdmins({
+          type: 'new_message',
+          message
+        });
+      } catch (broadcastError) {
+        console.error('[Contact Form] Broadcast error:', broadcastError);
+        // Don't fail the request if broadcasting fails
+      }
 
       // Return success response
-      res.json({ 
+      const response = {
         success: true,
         message: "Message received successfully",
-        data: message 
-      });
+        data: message
+      };
+      console.log('[Contact Form] Sending success response:', response);
+      return res.status(200).json(response);
+
     } catch (error) {
-      console.error("[Contact Form] Error:", error);
+      console.error("[Contact Form] Error processing request:", error);
 
       if (error instanceof ZodError) {
         const validationError = fromZodError(error);
-        return res.status(400).json({ 
+        console.error('[Contact Form] Validation error:', validationError);
+        return res.status(400).json({
           success: false,
-          error: "Validation error", 
-          details: validationError.message 
+          error: "Validation error",
+          details: validationError.message
         });
       }
 
-      res.status(500).json({ 
+      // Log the full error details
+      console.error('[Contact Form] Unexpected error:', {
+        error: error,
+        stack: error instanceof Error ? error.stack : undefined,
+        message: error instanceof Error ? error.message : String(error)
+      });
+
+      return res.status(500).json({
         success: false,
         error: "An unexpected error occurred",
-        message: process.env.NODE_ENV === 'development' ? (error as Error).message : 'Internal server error'
+        message: process.env.NODE_ENV === 'development' ? 
+          (error instanceof Error ? error.message : String(error)) : 
+          'Internal server error'
       });
     }
   });
 
-  // Get all contact messages (admin endpoint)
+  // Admin-only endpoint to get all messages
   app.get("/api/contact/messages", requireAdmin, async (_req, res) => {
     try {
       const messages = await storage.getAllContactMessages();
