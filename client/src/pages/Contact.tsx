@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import { Mail, Phone, MapPin } from "lucide-react";
 
 export default function Contact() {
@@ -26,7 +25,32 @@ export default function Contact() {
     mutationFn: async (data: InsertContact) => {
       try {
         console.log('Sending contact form data:', data);
-        const response = await apiRequest("POST", "/api/contact", data);
+
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(data),
+          credentials: 'include'
+        });
+
+        console.log('Contact form response status:', response.status);
+        const contentType = response.headers.get('content-type');
+        console.log('Response content type:', contentType);
+
+        if (!response.ok) {
+          let errorMessage = 'Failed to send message';
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorData.error || errorMessage;
+          } catch (e) {
+            console.error('Error parsing error response:', e);
+          }
+          throw new Error(errorMessage);
+        }
+
         const result = await response.json();
         console.log('Contact form response:', result);
 
@@ -36,15 +60,12 @@ export default function Contact() {
         return result;
       } catch (error: any) {
         console.error('Contact form error:', error);
-        // Log the full error details
-        if (error.response) {
-          console.error('Error response:', {
-            status: error.response.status,
-            headers: error.response.headers,
-            data: error.response.data
-          });
+        // Log network errors
+        if (error instanceof TypeError && error.message === 'Failed to fetch') {
+          console.error('Network error - could not reach the server');
+          throw new Error('Could not connect to the server. Please check your internet connection.');
         }
-        throw new Error(error.message || 'Failed to send message');
+        throw error;
       }
     },
     onSuccess: (result) => {
