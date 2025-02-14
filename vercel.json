@@ -6,14 +6,7 @@
       "use": "@vercel/node",
       "config": {
         "includeFiles": ["dist/**/*"],
-        "nodeVersion": "20.x"
-      }
-    },
-    {
-      "src": "client/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist/public"
+        "buildCommand": "npm run build"
       }
     }
   ],
@@ -31,9 +24,6 @@
     {
       "src": "/ws",
       "dest": "dist/server/index.js"
-    },
-    {
-      "handle": "filesystem"
     },
     {
       "src": "/(.*)",

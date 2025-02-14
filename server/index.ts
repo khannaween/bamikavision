@@ -1,6 +1,18 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes.js";
 import { setupVite, serveStatic, log } from "./vite.js";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Add debug logging for module resolution
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+console.log('Server initialization - Debug Info:', {
+  currentDir: __dirname,
+  nodeEnv: process.env.NODE_ENV,
+  cwd: process.cwd(),
+});
 
 const app = express();
 app.use(express.json());
@@ -81,7 +93,8 @@ app.use((req, res, next) => {
   try {
     console.log('Starting server initialization...', {
       NODE_ENV: process.env.NODE_ENV,
-      PORT: process.env.PORT
+      PORT: process.env.PORT,
+      moduleDir: __dirname
     });
 
     const server = registerRoutes(app);

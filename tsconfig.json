@@ -17,6 +17,8 @@
       "@shared/*": ["./shared/*"]
     },
     "types": ["node", "vite/client"],
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true
   }
 }

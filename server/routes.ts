@@ -7,6 +7,8 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth.js";
 
+console.log('Initializing routes module');
+
 // Store connected admin clients
 const adminClients = new Set<WebSocket>();
 
