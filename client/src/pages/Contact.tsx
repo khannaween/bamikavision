@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Phone, MapPin } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Contact() {
   const { toast } = useToast();
@@ -25,49 +26,11 @@ export default function Contact() {
     mutationFn: async (data: InsertContact) => {
       try {
         console.log('Starting contact form submission:', data);
-
-        // Get the current origin
-        const origin = window.location.origin;
-        console.log('Current origin:', origin);
-
-        const response = await fetch(`${origin}/api/contact`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify(data)
-        });
-
-        console.log('Response details:', {
-          status: response.status,
-          statusText: response.statusText,
-          headers: Object.fromEntries(response.headers.entries())
-        });
-
-        if (!response.ok) {
-          let errorMessage = 'Failed to send message';
-          const contentType = response.headers.get('content-type');
-
-          if (contentType?.includes('application/json')) {
-            try {
-              const errorData = await response.json();
-              console.error('Error response data:', errorData);
-              errorMessage = errorData.message || errorData.error || errorMessage;
-            } catch (e) {
-              console.error('Error parsing error response:', e);
-            }
-          } else {
-            console.error('Non-JSON error response:', await response.text());
-          }
-          throw new Error(errorMessage);
-        }
-
+        const response = await apiRequest("POST", "/api/contact", data);
         const result = await response.json();
-        console.log('Success response:', result);
 
         if (!result.success) {
-          throw new Error(result.message || result.error || 'Failed to send message');
+          throw new Error(result.message || 'Failed to send message');
         }
 
         return result;
@@ -77,16 +40,10 @@ export default function Contact() {
           message: error.message,
           stack: error.stack
         });
-
-        if (error instanceof TypeError && error.message === 'Failed to fetch') {
-          throw new Error('Could not connect to the server. Please check your internet connection.');
-        }
-
         throw error;
       }
     },
-    onSuccess: (result) => {
-      console.log('Contact form success:', result);
+    onSuccess: () => {
       toast({
         title: "Success!",
         description: "Your message has been sent. We'll get back to you soon.",
