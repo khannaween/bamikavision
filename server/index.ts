@@ -59,12 +59,32 @@ app.use((req, res, next) => {
 (async () => {
   const server = registerRoutes(app);
 
+  // Enhanced error handling middleware for Vercel deployment
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
+    // Log error details
+    console.error(`[Error] ${status} - ${message}`);
+    if (err.stack) console.error(err.stack);
+
+    // Handle specific Vercel error cases
+    switch (status) {
+      case 502:
+        res.status(502).json({ 
+          message: "Bad Gateway - Service temporarily unavailable",
+          code: "FUNCTION_INVOCATION_FAILED"
+        });
+        break;
+      case 504:
+        res.status(504).json({ 
+          message: "Gateway Timeout - Service took too long to respond",
+          code: "FUNCTION_INVOCATION_TIMEOUT"
+        });
+        break;
+      default:
+        res.status(status).json({ message, code: err.code });
+    }
   });
 
   // Handle production vs development environments
