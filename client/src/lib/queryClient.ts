@@ -2,8 +2,14 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    let errorMessage;
+    try {
+      const errorData = await res.json();
+      errorMessage = errorData.message || errorData.error || res.statusText;
+    } catch {
+      errorMessage = res.statusText;
+    }
+    throw new Error(`${res.status}: ${errorMessage}`);
   }
 }
 
@@ -12,9 +18,18 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  // Ensure URL starts with / and use relative path
+  const apiUrl = url.startsWith('/') ? url : `/${url}`;
+
+  const res = await fetch(apiUrl, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers: {
+      ...(data ? { "Content-Type": "application/json" } : {}),
+      // Add cache control headers to prevent caching
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      "Pragma": "no-cache",
+      "Expires": "0"
+    },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -31,6 +46,11 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     const res = await fetch(queryKey[0] as string, {
       credentials: "include",
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+      }
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

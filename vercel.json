@@ -12,15 +12,17 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "server/index.ts"
+      "dest": "/api/$1",
+      "continue": true
     },
     {
       "src": "/ws",
-      "dest": "server/index.ts"
+      "dest": "/ws",
+      "continue": true
     },
     {
       "src": "/(.*)",
-      "dest": "dist/public/$1"
+      "dest": "/dist/public/$1"
     }
   ],
   "env": {
