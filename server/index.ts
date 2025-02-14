@@ -13,12 +13,17 @@ app.use((req, res, next) => {
   const allowedDomains = [
     'http://localhost:5000',
     'http://localhost:3000',
-    ...(vercelUrl ? [`https://${vercelUrl}`] : []),
+    ...(vercelUrl ? [`https://${vercelUrl}`, `https://www.${vercelUrl}`] : []),
   ];
 
   const origin = req.headers.origin;
-  if (origin && allowedDomains.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
+  if (origin) {
+    // In production, be more permissive with origins for testing
+    if (process.env.NODE_ENV === 'production') {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    } else if (allowedDomains.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    }
   }
 
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -30,6 +35,7 @@ app.use((req, res, next) => {
     return res.status(200).end();
   }
 
+  // Add request logging
   const start = Date.now();
   const path = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
@@ -47,12 +53,11 @@ app.use((req, res, next) => {
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
+      if (res.statusCode >= 400) {
+        console.error(`[Error] ${logLine}`);
+      } else {
+        console.log(`[API] ${logLine}`);
       }
-
-      log(logLine);
     }
   });
 
@@ -62,7 +67,7 @@ app.use((req, res, next) => {
 (async () => {
   const server = registerRoutes(app);
 
-  // Enhanced error handling middleware for Vercel deployment
+  // Enhanced error handling middleware
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
@@ -71,37 +76,22 @@ app.use((req, res, next) => {
     console.error(`[Error] ${status} - ${message}`);
     if (err.stack) console.error(err.stack);
 
-    // Handle specific Vercel error cases
-    switch (status) {
-      case 502:
-        res.status(502).json({ 
-          message: "Bad Gateway - Service temporarily unavailable",
-          code: "FUNCTION_INVOCATION_FAILED"
-        });
-        break;
-      case 504:
-        res.status(504).json({ 
-          message: "Gateway Timeout - Service took too long to respond",
-          code: "FUNCTION_INVOCATION_TIMEOUT"
-        });
-        break;
-      default:
-        res.status(status).json({ message, code: err.code });
-    }
+    res.status(status).json({ 
+      message: process.env.NODE_ENV === 'production' 
+        ? 'An unexpected error occurred' 
+        : message,
+      code: err.code
+    });
   });
 
-  // Handle production vs development environments
   if (process.env.NODE_ENV === "production") {
-    // In production, serve static files directly
     serveStatic(app);
   } else {
-    // In development, use Vite's dev server
     await setupVite(app, server);
   }
 
-  // Use PORT from environment variable for Vercel or default to 5000
   const PORT = parseInt(process.env.PORT || "5000", 10);
   server.listen(PORT, "0.0.0.0", () => {
-    log(`serving on port ${PORT}`);
+    log(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
   });
 })();

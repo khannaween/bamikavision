@@ -70,17 +70,18 @@ export function registerRoutes(app: Express) {
     });
   });
 
-  // Contact form submission with enhanced error handling
+  // Contact form submission with enhanced error handling and logging
   app.post("/api/contact", async (req, res) => {
     try {
-      console.log("Received contact form submission:", req.body);
+      console.log(`[Contact Form] Received submission from ${req.headers.origin}:`, req.body);
 
       // Validate the request body
       const data = insertContactSchema.parse(req.body);
+      console.log("[Contact Form] Validation passed:", data);
 
       // Store the message locally
       const message = await storage.createContactMessage(data);
-      console.log("Stored message successfully:", message);
+      console.log("[Contact Form] Message stored:", message);
 
       // Broadcast the new message to all connected admin clients
       broadcastToAdmins({
@@ -94,7 +95,7 @@ export function registerRoutes(app: Express) {
         data: message 
       });
     } catch (error) {
-      console.error("Contact form error:", error);
+      console.error("[Contact Form] Error:", error);
 
       if (error instanceof ZodError) {
         const validationError = fromZodError(error);
@@ -104,7 +105,10 @@ export function registerRoutes(app: Express) {
         });
       }
 
-      res.status(500).json({ error: "An unexpected error occurred" });
+      res.status(500).json({ 
+        error: "An unexpected error occurred",
+        message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+      });
     }
   });
 
@@ -112,10 +116,9 @@ export function registerRoutes(app: Express) {
   app.get("/api/contact/messages", requireAdmin, async (_req, res) => {
     try {
       const messages = await storage.getAllContactMessages();
-      console.log("Fetching all messages:", messages);
       res.json(messages);
     } catch (error) {
-      console.error("Error fetching messages:", error);
+      console.error("[Contact Messages] Error fetching messages:", error);
       res.status(500).json({ error: "Failed to fetch messages" });
     }
   });
