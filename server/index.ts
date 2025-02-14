@@ -6,7 +6,27 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Add CORS headers for Vercel deployment
 app.use((req, res, next) => {
+  // Allow requests from Vercel domains
+  const vercelUrl = process.env.VERCEL_URL;
+  const allowedOrigins = ['https://*.vercel.app'].concat(vercelUrl ? [`https://${vercelUrl}`] : []);
+  const origin = req.headers.origin;
+
+  if (origin && allowedOrigins.some(allowed => {
+    try {
+      const pattern = new RegExp(allowed.replace('*', '.*'));
+      return pattern.test(origin);
+    } catch {
+      return false;
+    }
+  })) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
   const start = Date.now();
   const path = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
@@ -47,18 +67,17 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
+  // Handle production vs development environments
+  if (process.env.NODE_ENV === "production") {
+    // In production, serve static files directly
     serveStatic(app);
+  } else {
+    // In development, use Vite's dev server
+    await setupVite(app, server);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client
-  const PORT = 5000;
+  // Use PORT from environment variable for Vercel or default to 5000
+  const PORT = parseInt(process.env.PORT || "5000", 10);
   server.listen(PORT, "0.0.0.0", () => {
     log(`serving on port ${PORT}`);
   });
