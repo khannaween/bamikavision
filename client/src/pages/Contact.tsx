@@ -24,47 +24,64 @@ export default function Contact() {
   const mutation = useMutation({
     mutationFn: async (data: InsertContact) => {
       try {
-        console.log('Sending contact form data:', data);
+        console.log('Starting contact form submission:', data);
 
-        const response = await fetch('/api/contact', {
+        // Get the current origin
+        const origin = window.location.origin;
+        console.log('Current origin:', origin);
+
+        const response = await fetch(`${origin}/api/contact`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
           },
-          body: JSON.stringify(data),
-          credentials: 'include'
+          body: JSON.stringify(data)
         });
 
-        console.log('Contact form response status:', response.status);
-        const contentType = response.headers.get('content-type');
-        console.log('Response content type:', contentType);
+        console.log('Response details:', {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries())
+        });
 
         if (!response.ok) {
           let errorMessage = 'Failed to send message';
-          try {
-            const errorData = await response.json();
-            errorMessage = errorData.message || errorData.error || errorMessage;
-          } catch (e) {
-            console.error('Error parsing error response:', e);
+          const contentType = response.headers.get('content-type');
+
+          if (contentType?.includes('application/json')) {
+            try {
+              const errorData = await response.json();
+              console.error('Error response data:', errorData);
+              errorMessage = errorData.message || errorData.error || errorMessage;
+            } catch (e) {
+              console.error('Error parsing error response:', e);
+            }
+          } else {
+            console.error('Non-JSON error response:', await response.text());
           }
           throw new Error(errorMessage);
         }
 
         const result = await response.json();
-        console.log('Contact form response:', result);
+        console.log('Success response:', result);
 
         if (!result.success) {
           throw new Error(result.message || result.error || 'Failed to send message');
         }
+
         return result;
       } catch (error: any) {
-        console.error('Contact form error:', error);
-        // Log network errors
+        console.error('Contact form error:', {
+          error,
+          message: error.message,
+          stack: error.stack
+        });
+
         if (error instanceof TypeError && error.message === 'Failed to fetch') {
-          console.error('Network error - could not reach the server');
           throw new Error('Could not connect to the server. Please check your internet connection.');
         }
+
         throw error;
       }
     },
@@ -87,6 +104,7 @@ export default function Contact() {
   });
 
   const onSubmit = async (data: InsertContact) => {
+    console.log('Form submitted with data:', data);
     try {
       await mutation.mutateAsync(data);
     } catch (error) {

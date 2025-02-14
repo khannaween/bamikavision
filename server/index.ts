@@ -6,39 +6,47 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// CORS configuration for Vercel deployment
+// Enhanced CORS configuration
 app.use((req, res, next) => {
-  const vercelUrl = process.env.VERCEL_URL;
-  const allowedDomains = [
-    'http://localhost:5000',
-    'http://localhost:3000',
-    ...(vercelUrl ? [
-      `https://${vercelUrl}`,
-      `https://*.vercel.app`
-    ] : []),
-  ];
+  console.log('Incoming request:', {
+    method: req.method,
+    path: req.path,
+    origin: req.headers.origin,
+    host: req.headers.host
+  });
 
-  const origin = req.headers.origin;
-  if (origin) {
-    // In production, allow Vercel domains
-    if (process.env.NODE_ENV === 'production') {
-      if (origin.endsWith('.vercel.app') || origin.includes(vercelUrl || '')) {
+  // Allow all origins in development
+  if (process.env.NODE_ENV !== 'production') {
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  } else {
+    // In production, check for Vercel domains
+    const origin = req.headers.origin;
+    if (origin) {
+      if (origin.includes('vercel.app') || 
+          origin.includes('.bamikavision.com') || 
+          origin === 'https://bamikavision.com') {
         res.setHeader('Access-Control-Allow-Origin', origin);
       }
-    } else if (allowedDomains.includes(origin)) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
     }
   }
 
+  // Enhanced CORS headers
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
 
+  // Handle preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS preflight request');
     return res.status(200).end();
   }
 
-  // Add detailed request logging
+  next();
+});
+
+// Request logging middleware
+app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
@@ -70,19 +78,18 @@ app.use((req, res, next) => {
 (async () => {
   const server = registerRoutes(app);
 
-  // Add enhanced error handling middleware
+  // Enhanced error handling middleware
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    console.error('Server error:', {
+      status: err.status || err.statusCode || 500,
+      message: err.message,
+      stack: err.stack,
+      code: err.code
+    });
 
-    // Log error details
-    console.error(`[Error] ${status} - ${message}`);
-    if (err.stack) console.error(err.stack);
-
-    res.status(status).json({ 
-      message: process.env.NODE_ENV === 'production' 
-        ? 'An unexpected error occurred' 
-        : message,
+    res.status(err.status || err.statusCode || 500).json({
+      success: false,
+      message: process.env.NODE_ENV === 'production' ? 'An unexpected error occurred' : err.message,
       code: err.code
     });
   });
