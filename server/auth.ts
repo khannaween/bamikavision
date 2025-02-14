@@ -30,11 +30,12 @@ async function comparePasswords(supplied: string, stored: string) {
 
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
-    secret: "your-secret-key", // In production, use environment variable
+    secret: process.env.SESSION_SECRET || "dev-secret-key",
     resave: false,
     saveUninitialized: false,
     cookie: {
       secure: app.get("env") === "production",
+      sameSite: app.get("env") === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
     store: storage.sessionStore,
@@ -72,30 +73,6 @@ export function setupAuth(app: Express) {
     }
   });
 
-  // Create initial admin user if it doesn't exist
-  const createAdminUser = async () => {
-    const adminUsername = "bamika";
-    const existingAdmin = await storage.getUserByUsername(adminUsername);
-
-    if (!existingAdmin) {
-      const hashedPassword = await hashPassword("Bamika$007"); // Custom password
-      const adminUser = await storage.createUser({
-        username: adminUsername,
-        password: hashedPassword,
-      });
-
-      // Set admin privilege (directly modify the user object since it's in memory)
-      const user = await storage.getUser(adminUser.id);
-      if (user) {
-        user.isAdmin = true;
-      }
-
-      console.log("Admin user created successfully");
-    }
-  };
-
-  createAdminUser().catch(console.error);
-
   return {
     // Authentication middleware
     requireAuth: (req: Request, res: Response, next: NextFunction) => {
@@ -114,3 +91,27 @@ export function setupAuth(app: Express) {
     },
   };
 }
+
+// Create initial admin user if it doesn't exist
+const createAdminUser = async () => {
+  const adminUsername = "bamika";
+  const existingAdmin = await storage.getUserByUsername(adminUsername);
+
+  if (!existingAdmin) {
+    const hashedPassword = await hashPassword("Bamika$007"); // Custom password
+    const adminUser = await storage.createUser({
+      username: adminUsername,
+      password: hashedPassword,
+    });
+
+    // Set admin privilege (directly modify the user object since it's in memory)
+    const user = await storage.getUser(adminUser.id);
+    if (user) {
+      user.isAdmin = true;
+    }
+
+    console.log("Admin user created successfully");
+  }
+};
+
+createAdminUser().catch(console.error);
