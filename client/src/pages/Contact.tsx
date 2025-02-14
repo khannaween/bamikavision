@@ -26,11 +26,11 @@ export default function Contact() {
     mutationFn: async (data: InsertContact) => {
       try {
         const response = await apiRequest("POST", "/api/contact", data);
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to send message');
+        const result = await response.json();
+        if (!result.success) {
+          throw new Error(result.message || result.error || 'Failed to send message');
         }
-        return response.json();
+        return result;
       } catch (error: any) {
         console.error('Contact form error:', error);
         throw new Error(error.message || 'Failed to send message');
@@ -38,15 +38,15 @@ export default function Contact() {
     },
     onSuccess: () => {
       toast({
-        title: "Message sent!",
-        description: "We'll get back to you soon.",
+        title: "Success!",
+        description: "Your message has been sent. We'll get back to you soon.",
       });
       form.reset();
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to send message. Please try again.",
+        title: "Error sending message",
+        description: error.message || "Please try again later.",
         variant: "destructive",
       });
     },

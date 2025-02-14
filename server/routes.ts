@@ -1,17 +1,25 @@
 import type { Express } from "express";
-import { createServer } from "http";
+import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { insertContactSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth";
-import passport from 'passport';
 
 // Store connected admin clients
 const adminClients = new Set<WebSocket>();
 
-export function registerRoutes(app: Express) {
+// Broadcast to all connected admin clients
+function broadcastToAdmins(message: any) {
+  adminClients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(message));
+    }
+  });
+}
+
+export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
   const { requireAuth, requireAdmin } = setupAuth(app);
 
@@ -27,53 +35,11 @@ export function registerRoutes(app: Express) {
     });
   });
 
-  // Broadcast to all connected admin clients
-  function broadcastToAdmins(message: any) {
-    adminClients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(message));
-      }
-    });
-  }
-
-  // Authentication routes with better error handling
-  app.post("/api/login", (req, res, next) => {
-    console.log("Login attempt for:", req.body.username);
-    const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ message: "Username and password are required" });
-    }
-    passport.authenticate("local", (err: any, user: any, info: any) => {
-      if (err) {
-        console.error("Login error:", err);
-        return next(err);
-      }
-      if (!user) {
-        console.log("Authentication failed:", info?.message);
-        return res.status(401).json({ message: info?.message || "Authentication failed" });
-      }
-      req.logIn(user, (err) => {
-        if (err) {
-          console.error("Login error:", err);
-          return next(err);
-        }
-        console.log("User logged in successfully:", user.username);
-        res.json({ message: "Logged in successfully", user });
-      });
-    })(req, res, next);
-  });
-
-  app.post("/api/logout", (req, res) => {
-    console.log("Logout request for user:", req.user);
-    req.logout(() => {
-      res.json({ message: "Logged out successfully" });
-    });
-  });
-
   // Contact form submission with enhanced error handling and logging
   app.post("/api/contact", async (req, res) => {
     try {
-      console.log(`[Contact Form] Received submission from ${req.headers.origin}:`, req.body);
+      console.log("[Contact Form] Request headers:", req.headers);
+      console.log("[Contact Form] Request body:", req.body);
 
       // Validate the request body
       const data = insertContactSchema.parse(req.body);
@@ -91,6 +57,7 @@ export function registerRoutes(app: Express) {
 
       // Return success response
       res.json({ 
+        success: true,
         message: "Message received successfully",
         data: message 
       });
@@ -100,12 +67,14 @@ export function registerRoutes(app: Express) {
       if (error instanceof ZodError) {
         const validationError = fromZodError(error);
         return res.status(400).json({ 
+          success: false,
           error: "Validation error", 
           details: validationError.message 
         });
       }
 
       res.status(500).json({ 
+        success: false,
         error: "An unexpected error occurred",
         message: process.env.NODE_ENV === 'development' ? (error as Error).message : 'Internal server error'
       });
@@ -121,15 +90,6 @@ export function registerRoutes(app: Express) {
       console.error("[Contact Messages] Error fetching messages:", error);
       res.status(500).json({ error: "Failed to fetch messages" });
     }
-  });
-
-  // Get current user with enhanced error handling
-  app.get("/api/user", (req, res) => {
-    console.log("User session check:", req.isAuthenticated());
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Not authenticated" });
-    }
-    res.json(req.user);
   });
 
   return httpServer;
