@@ -20,7 +20,7 @@ function broadcastToAdmins(message: any) {
 }
 
 export function registerRoutes(app: Express): Server {
-  console.log('Registering routes...');
+  console.log('Registering routes and initializing contact form handler...');
   const httpServer = createServer(app);
   const { requireAuth, requireAdmin } = setupAuth(app);
 

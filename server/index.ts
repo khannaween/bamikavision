@@ -6,13 +6,14 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Enhanced CORS configuration
+// Enhanced CORS configuration 
 app.use((req, res, next) => {
   console.log('Incoming request:', {
     method: req.method,
     path: req.path,
     origin: req.headers.origin,
-    host: req.headers.host
+    host: req.headers.host,
+    body: req.method === 'POST' ? req.body : undefined
   });
 
   // Allow all origins in development
@@ -45,7 +46,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Request logging middleware
+// Request logging middleware with enhanced error tracking
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -54,6 +55,7 @@ app.use((req, res, next) => {
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
     capturedJsonResponse = bodyJson;
+    console.log(`Response JSON for ${path}:`, bodyJson);
     return originalResJson.apply(res, [bodyJson, ...args]);
   };
 
@@ -77,7 +79,11 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
-    console.log('Starting server initialization...');
+    console.log('Starting server initialization...', {
+      NODE_ENV: process.env.NODE_ENV,
+      PORT: process.env.PORT
+    });
+
     const server = registerRoutes(app);
 
     // Enhanced error handling middleware
@@ -86,7 +92,9 @@ app.use((req, res, next) => {
         status: err.status || err.statusCode || 500,
         message: err.message,
         stack: err.stack,
-        code: err.code
+        code: err.code,
+        type: err.type,
+        path: err.path
       });
 
       res.status(err.status || err.statusCode || 500).json({
@@ -109,7 +117,11 @@ app.use((req, res, next) => {
       log(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error('Failed to start server:', {
+      error,
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
     process.exit(1);
   }
 })();

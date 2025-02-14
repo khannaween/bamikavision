@@ -22,6 +22,7 @@ export class MemStorage implements IStorage {
   sessionStore: session.Store;
 
   constructor() {
+    console.log('Initializing MemStorage...');
     this.users = new Map();
     this.contactMessages = new Map();
     this.currentUserId = 1;
@@ -42,6 +43,7 @@ export class MemStorage implements IStorage {
   }
 
   private async createInitialAdminUser() {
+    console.log('Checking for admin user...');
     const adminUsername = "bamika";
     const existingAdmin = await this.getUserByUsername(adminUsername);
 
