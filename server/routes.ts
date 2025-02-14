@@ -1,11 +1,11 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
-import { storage } from "./storage";
-import { insertContactSchema } from "@shared/schema";
+import { storage } from "./storage.js";
+import { insertContactSchema } from "@shared/schema.js";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
-import { setupAuth } from "./auth";
+import { setupAuth } from "./auth.js";
 
 // Store connected admin clients
 const adminClients = new Set<WebSocket>();

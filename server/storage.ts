@@ -1,5 +1,5 @@
-import { contactMessages, type ContactMessage, type InsertContact } from "@shared/schema";
-import { users, type User, type InsertUser } from "@shared/schema";
+import { contactMessages, type ContactMessage, type InsertContact } from "@shared/schema.js";
+import { users, type User, type InsertUser } from "@shared/schema.js";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
