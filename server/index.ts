@@ -76,32 +76,40 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = registerRoutes(app);
+  try {
+    console.log('Starting server initialization...');
+    const server = registerRoutes(app);
 
-  // Enhanced error handling middleware
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    console.error('Server error:', {
-      status: err.status || err.statusCode || 500,
-      message: err.message,
-      stack: err.stack,
-      code: err.code
+    // Enhanced error handling middleware
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      console.error('Server error:', {
+        status: err.status || err.statusCode || 500,
+        message: err.message,
+        stack: err.stack,
+        code: err.code
+      });
+
+      res.status(err.status || err.statusCode || 500).json({
+        success: false,
+        message: process.env.NODE_ENV === 'production' ? 'An unexpected error occurred' : err.message,
+        code: err.code
+      });
     });
 
-    res.status(err.status || err.statusCode || 500).json({
-      success: false,
-      message: process.env.NODE_ENV === 'production' ? 'An unexpected error occurred' : err.message,
-      code: err.code
-    });
-  });
+    if (process.env.NODE_ENV === "production") {
+      console.log('Running in production mode, serving static files...');
+      serveStatic(app);
+    } else {
+      console.log('Running in development mode, setting up Vite...');
+      await setupVite(app, server);
+    }
 
-  if (process.env.NODE_ENV === "production") {
-    serveStatic(app);
-  } else {
-    await setupVite(app, server);
+    const PORT = parseInt(process.env.PORT || "5000", 10);
+    server.listen(PORT, "0.0.0.0", () => {
+      log(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
   }
-
-  const PORT = parseInt(process.env.PORT || "5000", 10);
-  server.listen(PORT, "0.0.0.0", () => {
-    log(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
-  });
 })();

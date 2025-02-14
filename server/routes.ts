@@ -20,6 +20,7 @@ function broadcastToAdmins(message: any) {
 }
 
 export function registerRoutes(app: Express): Server {
+  console.log('Registering routes...');
   const httpServer = createServer(app);
   const { requireAuth, requireAdmin } = setupAuth(app);
 
