@@ -57,16 +57,23 @@ export class MemStorage implements IStorage {
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    console.log("Getting user by ID:", id);
+    const user = this.users.get(id);
+    console.log("Found user:", !!user);
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
+    console.log("Getting user by username:", username);
+    const user = Array.from(this.users.values()).find(
       (user) => user.username === username,
     );
+    console.log("Found user:", !!user);
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
+    console.log("Creating new user:", insertUser.username);
     const id = this.currentUserId++;
     const user: User = {
       id,
@@ -74,10 +81,12 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
     };
     this.users.set(id, user);
+    console.log("User created successfully:", id);
     return user;
   }
 
   async createContactMessage(message: InsertContact): Promise<ContactMessage> {
+    console.log("Creating new contact message from:", message.email);
     const id = this.currentMessageId++;
     const contactMessage: ContactMessage = { 
       id, 
@@ -85,10 +94,12 @@ export class MemStorage implements IStorage {
       createdAt: new Date() 
     };
     this.contactMessages.set(id, contactMessage);
+    console.log("Contact message created successfully:", id);
     return contactMessage;
   }
 
   async getAllContactMessages(): Promise<ContactMessage[]> {
+    console.log("Fetching all contact messages");
     return Array.from(this.contactMessages.values());
   }
 }

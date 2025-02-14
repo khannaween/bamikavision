@@ -29,8 +29,13 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  if (!process.env.SESSION_SECRET) {
+    console.error("SESSION_SECRET environment variable is not set!");
+    process.exit(1);
+  }
+
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "dev-secret-key",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -58,23 +63,29 @@ export function setupAuth(app: Express) {
         }
         return done(null, user);
       } catch (error) {
+        console.error("Authentication error:", error);
         return done(error);
       }
     }),
   );
 
-  passport.serializeUser((user, done) => done(null, user.id));
+  passport.serializeUser((user, done) => {
+    console.log("Serializing user:", user.id);
+    done(null, user.id);
+  });
+
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
+      console.log("Deserialized user:", id, !!user);
       done(null, user);
     } catch (error) {
+      console.error("Deserialization error:", error);
       done(error);
     }
   });
 
   return {
-    // Authentication middleware
     requireAuth: (req: Request, res: Response, next: NextFunction) => {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Not authenticated" });
@@ -82,7 +93,6 @@ export function setupAuth(app: Express) {
       next();
     },
 
-    // Admin middleware
     requireAdmin: (req: Request, res: Response, next: NextFunction) => {
       if (!req.isAuthenticated() || !req.user?.isAdmin) {
         return res.status(403).json({ message: "Forbidden" });
