@@ -107,7 +107,7 @@ export function registerRoutes(app: Express) {
 
       res.status(500).json({ 
         error: "An unexpected error occurred",
-        message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        message: process.env.NODE_ENV === 'development' ? (error as Error).message : 'Internal server error'
       });
     }
   });
