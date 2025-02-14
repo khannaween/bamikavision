@@ -26,9 +26,34 @@ export class MemStorage implements IStorage {
     this.contactMessages = new Map();
     this.currentUserId = 1;
     this.currentMessageId = 1;
+
+    // Configure session store with proper settings for production
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // 24 hours
+      ttl: 86400000, // 24 hours
+      noDisposeOnSet: true,
+      dispose: (sid: string) => {
+        console.log(`Session ${sid} has expired`);
+      }
     });
+
+    // Create an admin user if it doesn't exist
+    this.createInitialAdminUser();
+  }
+
+  private async createInitialAdminUser() {
+    const adminUsername = "bamika";
+    const existingAdmin = await this.getUserByUsername(adminUsername);
+
+    if (!existingAdmin) {
+      const adminUser: InsertUser = {
+        username: adminUsername,
+        password: "8a20f9a2122b9ed172d073f7d4dba87270103da2", // Hashed password
+        isAdmin: true
+      };
+      await this.createUser(adminUser);
+      console.log("Admin user created successfully");
+    }
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -46,7 +71,6 @@ export class MemStorage implements IStorage {
     const user: User = {
       id,
       ...insertUser,
-      isAdmin: false,
       createdAt: new Date(),
     };
     this.users.set(id, user);
