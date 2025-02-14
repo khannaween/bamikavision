@@ -102,13 +102,8 @@ const createAdminUser = async () => {
     const adminUser = await storage.createUser({
       username: adminUsername,
       password: hashedPassword,
+      isAdmin: true
     });
-
-    // Set admin privilege (directly modify the user object since it's in memory)
-    const user = await storage.getUser(adminUser.id);
-    if (user) {
-      user.isAdmin = true;
-    }
 
     console.log("Admin user created successfully");
   }

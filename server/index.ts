@@ -18,7 +18,7 @@ app.use((req, res, next) => {
 
   const origin = req.headers.origin;
   if (origin) {
-    // In production, be more permissive with origins for testing
+    // In production, allow all origins temporarily for debugging
     if (process.env.NODE_ENV === 'production') {
       res.setHeader('Access-Control-Allow-Origin', origin);
     } else if (allowedDomains.includes(origin)) {
@@ -35,7 +35,7 @@ app.use((req, res, next) => {
     return res.status(200).end();
   }
 
-  // Add request logging
+  // Add detailed request logging
   const start = Date.now();
   const path = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;

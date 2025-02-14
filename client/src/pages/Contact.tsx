@@ -24,7 +24,17 @@ export default function Contact() {
 
   const mutation = useMutation({
     mutationFn: async (data: InsertContact) => {
-      await apiRequest("POST", "/api/contact", data);
+      try {
+        const response = await apiRequest("POST", "/api/contact", data);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to send message');
+        }
+        return response.json();
+      } catch (error: any) {
+        console.error('Contact form error:', error);
+        throw new Error(error.message || 'Failed to send message');
+      }
     },
     onSuccess: () => {
       toast({
@@ -33,14 +43,22 @@ export default function Contact() {
       });
       form.reset();
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to send message. Please try again.",
+        description: error.message || "Failed to send message. Please try again.",
         variant: "destructive",
       });
     },
   });
+
+  const onSubmit = async (data: InsertContact) => {
+    try {
+      await mutation.mutateAsync(data);
+    } catch (error) {
+      console.error('Form submission error:', error);
+    }
+  };
 
   return (
     <div className="w-full py-16 px-4 md:px-8">
@@ -88,7 +106,7 @@ export default function Contact() {
 
           <div>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                   control={form.control}
                   name="name"
