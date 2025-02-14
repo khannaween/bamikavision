@@ -2,11 +2,10 @@
   "version": 2,
   "builds": [
     {
-      "src": "server/index.ts",
+      "src": "dist/server/index.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["server/**/*", "shared/**/*"],
-        "buildCommand": "tsc",
+        "includeFiles": ["dist/**/*"],
         "nodeVersion": "20.x"
       }
     },
@@ -21,7 +20,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "server/index.ts",
+      "dest": "dist/server/index.js",
       "headers": {
         "Access-Control-Allow-Credentials": "true",
         "Access-Control-Allow-Origin": "*",
@@ -31,14 +30,14 @@
     },
     {
       "src": "/ws",
-      "dest": "server/index.ts"
+      "dest": "dist/server/index.js"
     },
     {
       "handle": "filesystem"
     },
     {
       "src": "/(.*)",
-      "dest": "server/index.ts"
+      "dest": "dist/server/index.js"
     }
   ],
   "env": {
