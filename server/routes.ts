@@ -99,8 +99,8 @@ export function registerRoutes(app: Express): Server {
 
       return res.status(500).json({
         success: false,
-        message: process.env.NODE_ENV === 'production' 
-          ? 'An unexpected error occurred' 
+        message: process.env.NODE_ENV === 'production'
+          ? 'An unexpected error occurred'
           : error instanceof Error ? error.message : 'Unknown error'
       });
     }
@@ -113,9 +113,9 @@ export function registerRoutes(app: Express): Server {
       res.json(messages);
     } catch (error) {
       console.error("[Contact Messages] Error fetching messages:", error);
-      res.status(500).json({ 
-        success: false, 
-        message: "Failed to fetch messages" 
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch messages"
       });
     }
   });

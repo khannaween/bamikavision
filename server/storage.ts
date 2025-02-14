@@ -3,6 +3,7 @@ import { users, type User, type InsertUser } from "@shared/schema.js";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
+// Rest of the file remains unchanged...
 const MemoryStore = createMemoryStore(session);
 
 export interface IStorage {
