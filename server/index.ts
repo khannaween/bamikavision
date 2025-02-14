@@ -6,7 +6,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Update the CORS configuration section
+// CORS configuration for Vercel deployment
 app.use((req, res, next) => {
   const vercelUrl = process.env.VERCEL_URL;
   const allowedDomains = [
@@ -14,17 +14,17 @@ app.use((req, res, next) => {
     'http://localhost:3000',
     ...(vercelUrl ? [
       `https://${vercelUrl}`,
-      `https://www.${vercelUrl}`,
-      // Allow all subdomains in production
-      vercelUrl.includes('.vercel.app') ? 'https://*.vercel.app' : null
-    ].filter(Boolean) : []),
+      `https://*.vercel.app`
+    ] : []),
   ];
 
   const origin = req.headers.origin;
   if (origin) {
-    // In production, allow the Vercel domain
-    if (process.env.NODE_ENV === 'production' && origin.includes('.vercel.app')) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
+    // In production, allow Vercel domains
+    if (process.env.NODE_ENV === 'production') {
+      if (origin.endsWith('.vercel.app') || origin.includes(vercelUrl || '')) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+      }
     } else if (allowedDomains.includes(origin)) {
       res.setHeader('Access-Control-Allow-Origin', origin);
     }
