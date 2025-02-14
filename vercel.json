@@ -19,6 +19,10 @@
       "dest": "server/index.ts"
     },
     {
+      "src": "/ws",
+      "dest": "server/index.ts"
+    },
+    {
       "handle": "filesystem"
     },
     {

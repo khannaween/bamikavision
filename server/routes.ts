@@ -36,31 +36,41 @@ export function registerRoutes(app: Express) {
     });
   }
 
-  // Authentication routes
+  // Authentication routes with better error handling
   app.post("/api/login", (req, res, next) => {
+    console.log("Login attempt for:", req.body.username);
     const { username, password } = req.body;
     if (!username || !password) {
       return res.status(400).json({ message: "Username and password are required" });
     }
     passport.authenticate("local", (err: any, user: any, info: any) => {
-      if (err) return next(err);
+      if (err) {
+        console.error("Login error:", err);
+        return next(err);
+      }
       if (!user) {
+        console.log("Authentication failed:", info?.message);
         return res.status(401).json({ message: info?.message || "Authentication failed" });
       }
       req.logIn(user, (err) => {
-        if (err) return next(err);
+        if (err) {
+          console.error("Login error:", err);
+          return next(err);
+        }
+        console.log("User logged in successfully:", user.username);
         res.json({ message: "Logged in successfully", user });
       });
     })(req, res, next);
   });
 
   app.post("/api/logout", (req, res) => {
+    console.log("Logout request for user:", req.user);
     req.logout(() => {
       res.json({ message: "Logged out successfully" });
     });
   });
 
-  // Contact form submission
+  // Contact form submission with enhanced error handling
   app.post("/api/contact", async (req, res) => {
     try {
       console.log("Received contact form submission:", req.body);
@@ -110,8 +120,9 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Get current user
+  // Get current user with enhanced error handling
   app.get("/api/user", (req, res) => {
+    console.log("User session check:", req.isAuthenticated());
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Not authenticated" });
     }
