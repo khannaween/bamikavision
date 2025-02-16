@@ -5,9 +5,7 @@
       "src": "dist/server/index.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["dist/**/*"],
-        "buildCommand": "npm run build",
-        "experimentalModules": true
+        "includeFiles": ["dist/**/*"]
       }
     }
   ],
