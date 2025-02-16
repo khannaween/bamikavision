@@ -40,7 +40,6 @@ app.use((req, res, next) => {
   next();
 });
 
-
 (async () => {
   try {
     const server = registerRoutes(app);
