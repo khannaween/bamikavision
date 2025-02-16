@@ -10,7 +10,6 @@ const navigation = [
   { name: "Services", href: "/services" },
   { name: "Contact", href: "/contact" },
   { name: "Investors", href: "/investors" },
-  { name: "Admin", href: "/admin" },
 ];
 
 export default function Navbar() {
