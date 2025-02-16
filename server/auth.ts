@@ -30,8 +30,7 @@ async function comparePasswords(supplied: string, stored: string) {
 
 export function setupAuth(app: Express) {
   if (!process.env.SESSION_SECRET) {
-    console.error("SESSION_SECRET environment variable is not set!");
-    process.exit(1);
+    throw new Error("SESSION_SECRET environment variable is not set!");
   }
 
   const sessionSettings: session.SessionOptions = {
@@ -45,10 +44,6 @@ export function setupAuth(app: Express) {
     },
     store: storage.sessionStore,
   };
-
-  if (app.get("env") === "production") {
-    app.set("trust proxy", 1);
-  }
 
   app.use(session(sessionSettings));
   app.use(passport.initialize());
@@ -115,13 +110,6 @@ export function setupAuth(app: Express) {
         return res.status(401).json({ message: "Not authenticated" });
       }
       next();
-    },
-
-    requireAdmin: (req: Request, res: Response, next: NextFunction) => {
-      if (!req.isAuthenticated() || !req.user?.isAdmin) {
-        return res.status(403).json({ message: "Forbidden" });
-      }
-      next();
-    },
+    }
   };
 }
