@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { insertContactSchema, type InsertContact } from "@shared/schema";
+import { contactSchema, type ContactFormData } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,8 +13,8 @@ import { apiRequest } from "@/lib/queryClient";
 
 export default function Contact() {
   const { toast } = useToast();
-  const form = useForm<InsertContact>({
-    resolver: zodResolver(insertContactSchema),
+  const form = useForm<ContactFormData>({
+    resolver: zodResolver(contactSchema),
     defaultValues: {
       name: "",
       email: "",
@@ -23,7 +23,7 @@ export default function Contact() {
   });
 
   const mutation = useMutation({
-    mutationFn: async (data: InsertContact) => {
+    mutationFn: async (data: ContactFormData) => {
       try {
         console.log('Starting contact form submission:', data);
         const response = await apiRequest("POST", "/api/contact", data);
@@ -60,7 +60,7 @@ export default function Contact() {
     },
   });
 
-  const onSubmit = async (data: InsertContact) => {
+  const onSubmit = async (data: ContactFormData) => {
     console.log('Form submitted with data:', data);
     try {
       await mutation.mutateAsync(data);
