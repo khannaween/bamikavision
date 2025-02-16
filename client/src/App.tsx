@@ -6,14 +6,10 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import About from "@/pages/About";
 import Services from "@/pages/Services";
-import Contact from "@/pages/Contact";
 import Investors from "@/pages/Investors";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
-import Admin from "@/pages/Admin";
-import Auth from "@/pages/Auth";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 function Router() {
   return (
@@ -24,11 +20,8 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/about" component={About} />
           <Route path="/services" component={Services} />
-          <Route path="/contact" component={Contact} />
           <Route path="/investors" component={Investors} />
           <Route path="/privacy-policy" component={PrivacyPolicy} />
-          <Route path="/auth" component={Auth} />
-          <ProtectedRoute path="/admin" component={Admin} />
           <Route component={NotFound} />
         </Switch>
       </main>
