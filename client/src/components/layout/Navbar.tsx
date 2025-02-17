@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "../ui/button.js";
+import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet.js";
 import { Menu } from "lucide-react";
-import { useI18n } from "@/lib/i18n";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useI18n } from "../../lib/i18n/index.js";
+import LanguageSwitcher from "../LanguageSwitcher.js";
 
 export default function Navbar() {
   const [location] = useLocation();

@@ -24,7 +24,7 @@ interface I18nProviderProps {
   children: ReactNode;
 }
 
-export function I18nProvider({ children }: I18nProviderProps): JSX.Element {
+export function I18nProvider({ children }: I18nProviderProps) {
   const [language, setLanguage] = useState<Language>('en');
 
   const t = (key: string): string => {
