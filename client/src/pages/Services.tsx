@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "../components/ui/card.js";
+import { Button } from "../components/ui/button.js";
 import { ArrowRight, Smartphone, Globe, Shield } from "lucide-react";
-import { useI18n } from "@/lib/i18n";
+import { useI18n } from "../lib/i18n/index.js";
 
 export default function Services() {
   const { t } = useI18n();
@@ -43,7 +43,7 @@ export default function Services() {
 
         {/* Features Grid */}
         <section className="mb-20">
-          <h2 className="text-3xl font-bold mb-8">{t('services.features.title')}</h2> {/*Corrected this line based on edited code's context.  Original had just "services.title" which is incorrect */}
+          <h2 className="text-3xl font-bold mb-8">{t('services.features.title')}</h2>
           <div className="grid md:grid-cols-3 gap-8">
             <FeatureCard
               icon={<Globe className="w-8 h-8" />}

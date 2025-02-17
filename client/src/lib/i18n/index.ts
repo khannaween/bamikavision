@@ -24,7 +24,7 @@ interface I18nProviderProps {
   children: ReactNode;
 }
 
-export function I18nProvider({ children }: I18nProviderProps) {
+export function I18nProvider({ children }: I18nProviderProps): JSX.Element {
   const [language, setLanguage] = useState<Language>('en');
 
   const t = (key: string): string => {
@@ -42,10 +42,14 @@ export function I18nProvider({ children }: I18nProviderProps) {
     return current;
   };
 
-  return <I18nContext.Provider value={{ language, setLanguage, t }}>{children}</I18nContext.Provider>;
+  return (
+    <I18nContext.Provider value={{ language, setLanguage, t }}>
+      {children}
+    </I18nContext.Provider>
+  );
 }
 
-export function useI18n() {
+export function useI18n(): I18nContextType {
   const context = useContext(I18nContext);
   if (!context) {
     throw new Error('useI18n must be used within an I18nProvider');

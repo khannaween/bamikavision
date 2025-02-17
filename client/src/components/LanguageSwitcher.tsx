@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { useI18n, type Language } from "@/lib/i18n";
+import { Button } from "./ui/button.js";
+import { useI18n, type Language } from "../lib/i18n/index.js";
 
 const languages: { code: Language; label: string }[] = [
   { code: "en", label: "English" },
