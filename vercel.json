@@ -35,6 +35,13 @@
   ],
   "env": {
     "NODE_ENV": "production",
-    "SESSION_SECRET": "@session-secret"
+    "SESSION_SECRET": "@session-secret",
+    "SMTP_HOST": "@smtp-host",
+    "SMTP_PORT": "@smtp-port",
+    "SMTP_USER": "@smtp-user",
+    "SMTP_PASS": "@smtp-pass",
+    "SMTP_FROM": "@smtp-from",
+    "CONTACT_EMAIL": "@contact-email",
+    "DATABASE_URL": "@database-url"
   }
 }
