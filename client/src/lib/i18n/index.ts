@@ -54,17 +54,14 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     return current;
   };
 
-  return (
-    <I18nContext.Provider 
-      value={{
-        language,
-        setLanguage,
-        t,
-      }}
-    >
-      {children}
-    </I18nContext.Provider>
-  );
+  return React.createElement(I18nContext.Provider, {
+    value: {
+      language,
+      setLanguage,
+      t
+    },
+    children
+  });
 }
 
 export function useI18n() {
