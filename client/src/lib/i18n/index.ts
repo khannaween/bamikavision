@@ -11,12 +11,16 @@ const translations = {
   fr,
 } as const;
 
-type TranslationsType = typeof translations;
-type NestedKeyOf<T> = T extends object ? {
-  [K in keyof T]: `${K & string}${T[K] extends object ? `.${NestedKeyOf<T[K]> & string}` : ''}`
-}[keyof T] : never;
+type DeepKeys<T> = T extends object 
+  ? { [K in keyof T]: K extends string 
+    ? T[K] extends object 
+      ? `${K}.${DeepKeys<T[K]>}` | K
+      : K 
+    : never 
+  }[keyof T]
+  : never;
 
-type TranslationKey = NestedKeyOf<typeof en>;
+type TranslationKey = DeepKeys<typeof en>;
 
 interface I18nContextType {
   language: Language;
@@ -24,7 +28,11 @@ interface I18nContextType {
   t: (key: TranslationKey) => string;
 }
 
-const I18nContext = createContext<I18nContextType | undefined>(undefined);
+const I18nContext = createContext<I18nContextType>({
+  language: 'en',
+  setLanguage: () => {},
+  t: (key) => key,
+});
 
 interface I18nProviderProps {
   children: ReactNode;
@@ -34,7 +42,7 @@ export function I18nProvider({ children }: I18nProviderProps) {
   const [language, setLanguage] = useState<Language>('en');
 
   const t = (key: TranslationKey): string => {
-    const keys = key.split('.');
+    const keys = key.split('.') as string[];
     let current: any = translations[language];
 
     for (const k of keys) {
@@ -48,14 +56,8 @@ export function I18nProvider({ children }: I18nProviderProps) {
     return current;
   };
 
-  const value: I18nContextType = {
-    language,
-    setLanguage,
-    t,
-  };
-
   return (
-    <I18nContext.Provider value={value}>
+    <I18nContext.Provider value={{ language, setLanguage, t }}>
       {children}
     </I18nContext.Provider>
   );

@@ -16,9 +16,16 @@ app.use(express.urlencoded({ extended: false }));
 // Trust proxy settings for Vercel
 app.set('trust proxy', true);
 
+// Request logging middleware
+app.use((req: Request, _res: Response, next: NextFunction) => {
+  log(`${req.method} ${req.url}`, 'request');
+  next();
+});
+
 // Ensure HTTPS
 app.use((req, res, next) => {
   if (process.env.NODE_ENV === 'production' && !req.secure && req.get('x-forwarded-proto') !== 'https') {
+    log(`Redirecting insecure request to HTTPS: ${req.url}`, 'security');
     return res.redirect('https://' + req.get('host') + req.url);
   }
   next();
@@ -36,6 +43,7 @@ app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (origin && (process.env.NODE_ENV !== 'production' || allowedOrigins.includes(origin))) {
     res.setHeader('Access-Control-Allow-Origin', origin);
+    log(`CORS allowed for origin: ${origin}`, 'cors');
   }
 
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -45,6 +53,7 @@ app.use((req, res, next) => {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 
   if (req.method === 'OPTIONS') {
+    log('Responding to CORS preflight request', 'cors');
     return res.status(200).end();
   }
 
@@ -53,12 +62,25 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
+    log('Starting server initialization...', 'startup');
     const server = registerRoutes(app);
 
-    // Global error handler
-    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      console.error('Server Error:', err);
-      res.status(err.status || err.statusCode || 500).json({
+    // Global error handler with enhanced logging
+    app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+      const errorDetails = {
+        message: err.message,
+        stack: err.stack,
+        status: err.status || err.statusCode || 500,
+        path: req.path,
+        method: req.method,
+        query: req.query,
+        body: req.body,
+        headers: req.headers,
+      };
+
+      console.error('Server Error:', JSON.stringify(errorDetails, null, 2));
+
+      res.status(errorDetails.status).json({
         success: false,
         message: process.env.NODE_ENV === 'production' ? 'An unexpected error occurred' : err.message,
         code: err.code
@@ -66,14 +88,16 @@ app.use((req, res, next) => {
     });
 
     if (process.env.NODE_ENV === "production") {
+      log('Setting up production static file serving...', 'startup');
       serveStatic(app);
     } else {
+      log('Setting up Vite development middleware...', 'startup');
       await setupVite(app, server);
     }
 
     const PORT = parseInt(process.env.PORT || "5000", 10);
     server.listen(PORT, "0.0.0.0", () => {
-      log(`Server running on port ${PORT}`);
+      log(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`, 'startup');
     });
   } catch (error) {
     console.error('Failed to start server:', error);

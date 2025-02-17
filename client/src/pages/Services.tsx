@@ -15,9 +15,9 @@ export default function Services() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-16"
         >
-          <h1 className="text-4xl font-bold mb-6">{t('services.title')}</h1>
+          <h1 className="text-4xl font-bold mb-6">{t("services.title")}</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            {t('services.subtitle')}
+            {t("services.subtitle")}
           </p>
         </motion.div>
 
@@ -26,12 +26,12 @@ export default function Services() {
           <Card>
             <CardContent className="p-8 grid md:grid-cols-2 gap-8 items-center">
               <div>
-                <h2 className="text-3xl font-bold mb-4">{t('services.platform.title')}</h2>
+                <h2 className="text-3xl font-bold mb-4">{t("services.platform.title")}</h2>
                 <p className="text-muted-foreground mb-6">
-                  {t('services.platform.description')}
+                  {t("services.platform.description")}
                 </p>
                 <Button>
-                  {t('services.platform.learnMore')} <ArrowRight className="ml-2" />
+                  {t("services.platform.learnMore")} <ArrowRight className="ml-2" />
                 </Button>
               </div>
               <div className="bg-muted rounded-lg p-4 aspect-video flex items-center justify-center">
@@ -42,25 +42,22 @@ export default function Services() {
         </section>
 
         {/* Features Grid */}
-        <section className="mb-20">
-          <h2 className="text-3xl font-bold mb-8">{t('services.features.title')}</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <FeatureCard
-              icon={<Globe className="w-8 h-8" />}
-              title={t('services.features.connectivity.title')}
-              description={t('services.features.connectivity.description')}
-            />
-            <FeatureCard
-              icon={<Shield className="w-8 h-8" />}
-              title={t('services.features.security.title')}
-              description={t('services.features.security.description')}
-            />
-            <FeatureCard
-              icon={<Smartphone className="w-8 h-8" />}
-              title={t('services.features.platform.title')}
-              description={t('services.features.platform.description')}
-            />
-          </div>
+        <section className="grid md:grid-cols-3 gap-8 mb-20">
+          <FeatureCard
+            icon={<Globe className="w-8 h-8" />}
+            title={t("services.features.connectivity.title")}
+            description={t("services.features.connectivity.description")}
+          />
+          <FeatureCard
+            icon={<Shield className="w-8 h-8" />}
+            title={t("services.features.security.title")}
+            description={t("services.features.security.description")}
+          />
+          <FeatureCard
+            icon={<Smartphone className="w-8 h-8" />}
+            title={t("services.features.platform.title")}
+            description={t("services.features.platform.description")}
+          />
         </section>
       </div>
     </div>
