@@ -44,7 +44,7 @@ export function setupAuth(app: Express) {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       httpOnly: true,
       path: '/',
-      domain: app.get("env") === "production" ? ".bamikavision.com" : undefined
+      domain: app.get("env") === "production" ? ".vercel.app" : undefined
     },
     store: storage.sessionStore,
     name: 'bamika.sid'

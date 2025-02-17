@@ -28,7 +28,8 @@ app.use((req, res, next) => {
     'http://localhost:5000',
     'https://localhost:5000',
     'https://bamikavision.com',
-    'https://www.bamikavision.com'
+    'https://www.bamikavision.com',
+    'https://bamika-vision.vercel.app' // Add Vercel domain
   ];
 
   const origin = req.headers.origin;
@@ -38,7 +39,7 @@ app.use((req, res, next) => {
   }
 
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With, Cache-Control');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Max-Age', '86400');
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
