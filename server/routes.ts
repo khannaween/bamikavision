@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage.js";
 import { setupAuth } from "./auth.js";
 import { contactSchema } from "@shared/schema.js";
-import nodemailer from "nodemailer";
+import { MailService } from '@sendgrid/mail';
 
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
@@ -93,26 +93,22 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Contact form endpoint
+  // Contact form endpoint with SendGrid
   app.post("/api/contact", async (req: Request, res: Response) => {
     try {
       const contactData = contactSchema.parse(req.body);
 
-      // Create email transporter
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || "smtp.gmail.com",
-        port: parseInt(process.env.SMTP_PORT || "587"),
-        secure: process.env.SMTP_SECURE === "true",
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-      });
+      if (!process.env.SENDGRID_API_KEY) {
+        throw new Error("SENDGRID_API_KEY environment variable is not set");
+      }
 
-      // Send email
-      await transporter.sendMail({
-        from: process.env.SMTP_FROM || "noreply@bamikavision.com",
-        to: process.env.CONTACT_EMAIL || "contact@bamikavision.com",
+      const mailService = new MailService();
+      mailService.setApiKey(process.env.SENDGRID_API_KEY);
+
+      // Send email using SendGrid
+      await mailService.send({
+        to: process.env.CONTACT_EMAIL || 'contact@bamikavision.com',
+        from: process.env.SENDGRID_FROM_EMAIL || 'noreply@bamikavision.com',
         subject: `[${contactData.type}] ${contactData.subject}`,
         text: `
 Name: ${contactData.name}
