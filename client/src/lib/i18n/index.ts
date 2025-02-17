@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, type ReactNode } from 'react';
 import en from './translations/en.json';
 import es from './translations/es.json';
 import fr from './translations/fr.json';
@@ -28,17 +28,15 @@ interface I18nContextType {
   t: (key: TranslationKey) => string;
 }
 
-const I18nContext = createContext<I18nContextType>({
+const defaultContext: I18nContextType = {
   language: 'en',
   setLanguage: () => {},
   t: (key) => key,
-});
+};
 
-interface I18nProviderProps {
-  children: ReactNode;
-}
+const I18nContext = createContext<I18nContextType>(defaultContext);
 
-export function I18nProvider({ children }: I18nProviderProps) {
+export function I18nProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>('en');
 
   const t = (key: TranslationKey): string => {
@@ -57,7 +55,13 @@ export function I18nProvider({ children }: I18nProviderProps) {
   };
 
   return (
-    <I18nContext.Provider value={{ language, setLanguage, t }}>
+    <I18nContext.Provider 
+      value={{
+        language,
+        setLanguage,
+        t,
+      }}
+    >
       {children}
     </I18nContext.Provider>
   );

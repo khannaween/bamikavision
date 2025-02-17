@@ -14,20 +14,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Trust proxy settings for Vercel
-app.set('trust proxy', true);
+app.set('trust proxy', 1);
 
 // Request logging middleware
 app.use((req: Request, _res: Response, next: NextFunction) => {
   log(`${req.method} ${req.url}`, 'request');
-  next();
-});
-
-// Ensure HTTPS
-app.use((req, res, next) => {
-  if (process.env.NODE_ENV === 'production' && !req.secure && req.get('x-forwarded-proto') !== 'https') {
-    log(`Redirecting insecure request to HTTPS: ${req.url}`, 'security');
-    return res.redirect('https://' + req.get('host') + req.url);
-  }
   next();
 });
 
