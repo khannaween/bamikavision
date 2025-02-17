@@ -34,7 +34,7 @@ export function setupAuth(app: Express) {
   }
 
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET!,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -42,8 +42,11 @@ export function setupAuth(app: Express) {
       sameSite: app.get("env") === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       httpOnly: true,
+      path: '/',
+      domain: app.get("env") === "production" ? ".bamikavision.com" : undefined
     },
     store: storage.sessionStore,
+    name: 'bamika.sid'
   };
 
   app.use(session(sessionSettings));
