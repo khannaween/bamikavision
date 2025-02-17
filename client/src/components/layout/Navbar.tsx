@@ -17,16 +17,16 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="bg-black/95 border-b border-primary/20 backdrop-blur-sm fixed w-full z-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
           <div className="flex">
             <Link href="/">
-              <Button variant="ghost" className="flex items-center">
+              <a className="flex items-center">
                 <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
                   Bamika Vision
                 </span>
-              </Button>
+              </a>
             </Link>
           </div>
 
@@ -39,7 +39,7 @@ export default function Navbar() {
                   className={`text-sm font-medium transition-colors ${
                     location === item.href 
                       ? "bg-primary text-primary-foreground" 
-                      : "text-gray-300 hover:text-white hover:bg-primary/10"
+                      : "text-foreground hover:text-primary hover:bg-primary/10"
                   }`}
                 >
                   {item.name}
@@ -49,23 +49,24 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Navigation */}
-          <div className="flex items-center md:hidden">
+          <div className="flex md:hidden">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-gray-300">
+                <Button variant="ghost" size="icon">
                   <Menu className="h-6 w-6" />
+                  <span className="sr-only">Open menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent className="bg-black/95 border-primary/20">
+              <SheetContent side="right" className="w-[80vw] sm:w-[385px]">
                 <div className="flex flex-col space-y-4 mt-4">
                   {navigation.map((item) => (
                     <Link key={item.name} href={item.href}>
                       <Button
                         variant={location === item.href ? "default" : "ghost"}
-                        className={`w-full justify-start ${
+                        className={`w-full justify-start text-base ${
                           location === item.href 
                             ? "bg-primary text-primary-foreground" 
-                            : "text-gray-300 hover:text-white hover:bg-primary/10"
+                            : "text-foreground hover:text-primary hover:bg-primary/10"
                         }`}
                         onClick={() => setIsOpen(false)}
                       >
