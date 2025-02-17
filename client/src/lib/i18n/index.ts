@@ -1,13 +1,15 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 import en from './translations/en.json';
 import es from './translations/es.json';
+import fr from './translations/fr.json';
 
-export type Language = 'en' | 'es';
+export type Language = 'en' | 'es' | 'fr';
 export type Translations = typeof en;
 
 const translations = {
   en,
   es,
+  fr,
 } as const;
 
 type I18nContextType = {
@@ -18,7 +20,11 @@ type I18nContextType = {
 
 const I18nContext = createContext<I18nContextType | null>(null);
 
-export function I18nProvider({ children }: { children: React.ReactNode }) {
+interface I18nProviderProps {
+  children: ReactNode;
+}
+
+export function I18nProvider({ children }: I18nProviderProps) {
   const [language, setLanguage] = useState<Language>('en');
 
   const t = (key: string): string => {
@@ -36,17 +42,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     return current;
   };
 
-  return (
-    <I18nContext.Provider 
-      value={{ 
-        language, 
-        setLanguage, 
-        t 
-      }}
-    >
-      {children}
-    </I18nContext.Provider>
-  );
+  return <I18nContext.Provider value={{ language, setLanguage, t }}>{children}</I18nContext.Provider>;
 }
 
 export function useI18n() {

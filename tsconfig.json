@@ -19,6 +19,7 @@
     "types": ["node", "vite/client"],
     "jsx": "react-jsx",
     "resolveJsonModule": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "allowJs": true
   }
 }

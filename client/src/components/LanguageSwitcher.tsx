@@ -4,6 +4,7 @@ import { useI18n, type Language } from "@/lib/i18n";
 const languages: { code: Language; label: string }[] = [
   { code: "en", label: "English" },
   { code: "es", label: "Español" },
+  { code: "fr", label: "Français" }
 ];
 
 export default function LanguageSwitcher() {
