@@ -3,18 +3,21 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
-
-const navigation = [
-  { name: "Home", href: "/" },
-  { name: "About", href: "/about" },
-  { name: "Services", href: "/services" },
-  { name: "Contact", href: "/contact" },
-  { name: "Investors", href: "/investors" },
-];
+import { useI18n } from "@/lib/i18n";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 export default function Navbar() {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useI18n();
+
+  const navigation = [
+    { name: t('nav.home'), href: "/" },
+    { name: t('nav.about'), href: "/about" },
+    { name: t('nav.services'), href: "/services" },
+    { name: t('nav.contact'), href: "/contact" },
+    { name: t('nav.investors'), href: "/investors" },
+  ];
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
@@ -46,6 +49,9 @@ export default function Navbar() {
                 </Button>
               </Link>
             ))}
+            <div className="ml-4">
+              <LanguageSwitcher />
+            </div>
           </div>
 
           {/* Mobile Navigation */}
@@ -74,6 +80,9 @@ export default function Navbar() {
                       </Button>
                     </Link>
                   ))}
+                  <div className="pt-4">
+                    <LanguageSwitcher />
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>

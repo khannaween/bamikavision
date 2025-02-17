@@ -1,0 +1,32 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "about": "Nosotros",
+    "services": "Servicios",
+    "contact": "Contacto",
+    "investors": "Inversores"
+  },
+  "services": {
+    "title": "Nuestros Servicios",
+    "subtitle": "Descubre cómo Bamika Vision puede transformar tu experiencia social",
+    "platform": {
+      "title": "Plataforma Social",
+      "description": "Experimenta la conexión social como nunca antes con nuestra innovadora plataforma",
+      "learnMore": "Más Información"
+    },
+    "features": {
+      "connectivity": {
+        "title": "Conectividad Global",
+        "description": "Conéctate con usuarios de todo el mundo a través de nuestra innovadora plataforma"
+      },
+      "security": {
+        "title": "Seguridad Avanzada",
+        "description": "Medidas de seguridad de última generación para proteger tus datos"
+      },
+      "platform": {
+        "title": "Multiplataforma",
+        "description": "Experiencia perfecta en todos tus dispositivos"
+      }
+    }
+  }
+}
