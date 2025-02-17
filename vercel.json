@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "buildCommand": "npm run build",
   "builds": [
     {
       "src": "dist/server/index.js",
@@ -18,18 +19,30 @@
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
         "Access-Control-Allow-Headers": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version",
-        "Strict-Transport-Security": "max-age=31536000; includeSubDomains"
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+        "Cache-Control": "no-store, no-cache, must-revalidate"
       }
     },
     {
-      "src": "/ws",
-      "dest": "dist/server/index.js"
+      "src": "/static/(.*)",
+      "dest": "dist/public/static/$1",
+      "headers": {
+        "Cache-Control": "public, max-age=0, must-revalidate"
+      }
+    },
+    {
+      "src": "/(.*)\\.(.+)$",
+      "dest": "dist/public/$1.$2",
+      "headers": {
+        "Cache-Control": "public, max-age=0, must-revalidate"
+      }
     },
     {
       "src": "/(.*)",
       "dest": "dist/server/index.js",
       "headers": {
-        "Strict-Transport-Security": "max-age=31536000; includeSubDomains"
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+        "Cache-Control": "no-store, no-cache, must-revalidate"
       }
     }
   ],
