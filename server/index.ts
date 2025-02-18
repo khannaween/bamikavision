@@ -81,13 +81,16 @@ app.use((req, res, next) => {
 
     if (process.env.NODE_ENV === "production") {
       log('Setting up production static file serving...', 'startup');
+      // Serve static files from the public directory
       app.use(express.static(path.join(__dirname, '../public')));
 
-      // Serve index.html for all non-API routes in production
+      // Handle all other routes by serving index.html
       app.get('*', (req, res, next) => {
+        // Skip API routes
         if (req.path.startsWith('/api/')) {
           return next();
         }
+        // Send the index.html for client-side routing
         res.sendFile(path.join(__dirname, '../public/index.html'));
       });
     } else {
