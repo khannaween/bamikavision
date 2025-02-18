@@ -1,0 +1,678 @@
+var __defProp = Object.defineProperty;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
+  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
+}) : x)(function(x) {
+  if (typeof require !== "undefined") return require.apply(this, arguments);
+  throw Error('Dynamic require of "' + x + '" is not supported');
+});
+var __esm = (fn, res) => function __init() {
+  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+};
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+
+// vite.config.ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import themePlugin from "@replit/vite-plugin-shadcn-theme-json";
+import path, { dirname } from "path";
+import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+import { fileURLToPath } from "url";
+var __filename, __dirname, vite_config_default;
+var init_vite_config = __esm({
+  "vite.config.ts"() {
+    "use strict";
+    __filename = fileURLToPath(import.meta.url);
+    __dirname = dirname(__filename);
+    vite_config_default = defineConfig({
+      plugins: [react(), runtimeErrorOverlay(), themePlugin()],
+      resolve: {
+        alias: {
+          "@": path.resolve(__dirname, "client", "src"),
+          "@shared": path.resolve(__dirname, "shared")
+        }
+      },
+      root: path.resolve(__dirname, "client"),
+      build: {
+        outDir: path.resolve(__dirname, "dist/public"),
+        emptyOutDir: true
+      }
+    });
+  }
+});
+
+// server/vite.ts
+import express from "express";
+import fs from "fs";
+import path2, { dirname as dirname2 } from "path";
+import { fileURLToPath as fileURLToPath2 } from "url";
+import { createServer as createViteServer, createLogger } from "vite";
+import { nanoid } from "nanoid";
+function log(message, source = "express") {
+  const formattedTime = (/* @__PURE__ */ new Date()).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true
+  });
+  console.log(`${formattedTime} [${source}] ${message}`);
+}
+async function setupVite(app2, server) {
+  const serverOptions = {
+    middlewareMode: true,
+    hmr: { server },
+    allowedHosts: true
+  };
+  const vite = await createViteServer({
+    ...vite_config_default,
+    configFile: false,
+    customLogger: {
+      ...viteLogger,
+      error: (msg, options) => {
+        viteLogger.error(msg, options);
+        process.exit(1);
+      }
+    },
+    server: serverOptions,
+    appType: "custom"
+  });
+  app2.use(vite.middlewares);
+  app2.use("*", async (req, res, next) => {
+    const url = req.originalUrl;
+    try {
+      const clientTemplate = path2.resolve(
+        __dirname2,
+        "..",
+        "client",
+        "index.html"
+      );
+      let template = await fs.promises.readFile(clientTemplate, "utf-8");
+      template = template.replace(
+        `src="/src/main.tsx"`,
+        `src="/src/main.tsx?v=${nanoid()}"`
+      );
+      const page = await vite.transformIndexHtml(url, template);
+      res.status(200).set({ "Content-Type": "text/html" }).end(page);
+    } catch (e) {
+      vite.ssrFixStacktrace(e);
+      next(e);
+    }
+  });
+}
+var __filename2, __dirname2, viteLogger;
+var init_vite = __esm({
+  "server/vite.ts"() {
+    "use strict";
+    init_vite_config();
+    __filename2 = fileURLToPath2(import.meta.url);
+    __dirname2 = dirname2(__filename2);
+    viteLogger = createLogger();
+  }
+});
+
+// server/storage.ts
+import session from "express-session";
+import createMemoryStore from "memorystore";
+var MemoryStore, MemStorage, storage;
+var init_storage = __esm({
+  "server/storage.ts"() {
+    "use strict";
+    MemoryStore = createMemoryStore(session);
+    MemStorage = class {
+      sessionStore;
+      users = [];
+      services = [];
+      companyInfo = null;
+      nextUserId = 1;
+      nextServiceId = 1;
+      nextCompanyInfoId = 1;
+      constructor() {
+        this.sessionStore = new MemoryStore({
+          checkPeriod: 864e5,
+          // 24 hours
+          ttl: 864e5,
+          // 24 hours
+          noDisposeOnSet: true,
+          dispose: (sid) => {
+            console.log(`Session ${sid} has expired`);
+          }
+        });
+      }
+      // User methods
+      async getUser(id) {
+        return this.users.find((u) => u.id === id) || null;
+      }
+      async getUserByUsername(username) {
+        return this.users.find((u) => u.username === username) || null;
+      }
+      async createUser(user) {
+        const newUser = {
+          id: this.nextUserId++,
+          createdAt: /* @__PURE__ */ new Date(),
+          ...user
+        };
+        this.users.push(newUser);
+        return newUser;
+      }
+      // Service methods
+      async getServices() {
+        return this.services;
+      }
+      async getService(id) {
+        return this.services.find((s) => s.id === id) || null;
+      }
+      async createService(service) {
+        const newService = {
+          id: this.nextServiceId++,
+          ...service
+        };
+        this.services.push(newService);
+        return newService;
+      }
+      async updateService(id, service) {
+        const index = this.services.findIndex((s) => s.id === id);
+        if (index === -1) return null;
+        this.services[index] = {
+          ...this.services[index],
+          ...service
+        };
+        return this.services[index];
+      }
+      async deleteService(id) {
+        const index = this.services.findIndex((s) => s.id === id);
+        if (index === -1) return false;
+        this.services.splice(index, 1);
+        return true;
+      }
+      // Company Info methods
+      async getCompanyInfo() {
+        return this.companyInfo;
+      }
+      async updateCompanyInfo(info) {
+        if (!this.companyInfo) {
+          this.companyInfo = {
+            id: this.nextCompanyInfoId++,
+            ...info
+          };
+        } else {
+          this.companyInfo = {
+            ...this.companyInfo,
+            ...info
+          };
+        }
+        return this.companyInfo;
+      }
+    };
+    storage = new MemStorage();
+  }
+});
+
+// server/auth.ts
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import session2 from "express-session";
+import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import { promisify } from "util";
+async function hashPassword(password) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = await scryptAsync(password, salt, 64);
+  return `${buf.toString("hex")}.${salt}`;
+}
+async function comparePasswords(supplied, stored) {
+  const [hashed, salt] = stored.split(".");
+  const hashedBuf = Buffer.from(hashed, "hex");
+  const suppliedBuf = await scryptAsync(supplied, salt, 64);
+  return timingSafeEqual(hashedBuf, suppliedBuf);
+}
+function setupAuth(app2) {
+  if (!process.env.SESSION_SECRET) {
+    throw new Error("SESSION_SECRET environment variable is not set!");
+  }
+  const sessionSettings = {
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: app2.get("env") === "production",
+      sameSite: app2.get("env") === "production" ? "none" : "lax",
+      maxAge: 24 * 60 * 60 * 1e3,
+      // 24 hours
+      httpOnly: true,
+      path: "/",
+      domain: app2.get("env") === "production" ? ".vercel.app" : void 0
+    },
+    store: storage.sessionStore,
+    name: "bamika.sid"
+  };
+  log("Initializing session middleware...", "auth");
+  app2.use(session2(sessionSettings));
+  app2.use(passport.initialize());
+  app2.use(passport.session());
+  passport.use(
+    new LocalStrategy(async (username, password, done) => {
+      try {
+        log(`Attempting authentication for user: ${username}`, "auth");
+        const user = await storage.getUserByUsername(username);
+        if (!user || !await comparePasswords(password, user.password)) {
+          log(`Authentication failed for user: ${username}`, "auth");
+          return done(null, false);
+        } else {
+          log(`Authentication successful for user: ${username}`, "auth");
+          return done(null, user);
+        }
+      } catch (error) {
+        console.error("Authentication error:", error);
+        return done(error);
+      }
+    })
+  );
+  passport.serializeUser((user, done) => {
+    log(`Serializing user: ${user.id}`, "auth");
+    done(null, user.id);
+  });
+  passport.deserializeUser(async (id, done) => {
+    try {
+      log(`Deserializing user: ${id}`, "auth");
+      const user = await storage.getUser(id);
+      done(null, user);
+    } catch (error) {
+      console.error(`Error deserializing user ${id}:`, error);
+      done(error, null);
+    }
+  });
+  app2.post("/api/register", async (req, res, next) => {
+    try {
+      log(`Registration attempt for username: ${req.body.username}`, "auth");
+      const existingUser = await storage.getUserByUsername(req.body.username);
+      if (existingUser) {
+        log(`Registration failed - username already exists: ${req.body.username}`, "auth");
+        return res.status(400).json({ message: "Username already exists" });
+      }
+      const user = await storage.createUser({
+        ...req.body,
+        password: await hashPassword(req.body.password)
+      });
+      log(`User registered successfully: ${user.username}`, "auth");
+      req.login(user, (err) => {
+        if (err) {
+          log(`Login error after registration: ${err.message}`, "auth");
+          return next(err);
+        }
+        res.status(201).json(user);
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      next(error);
+    }
+  });
+  app2.post("/api/login", (req, res, next) => {
+    log(`Login attempt for username: ${req.body.username}`, "auth");
+    passport.authenticate("local", (err, user, info) => {
+      if (err) {
+        log(`Login error: ${err.message}`, "auth");
+        return next(err);
+      }
+      if (!user) {
+        log(`Login failed for username: ${req.body.username}`, "auth");
+        return res.status(401).json({ message: info?.message || "Authentication failed" });
+      }
+      req.login(user, (err2) => {
+        if (err2) {
+          log(`Session creation error: ${err2.message}`, "auth");
+          return next(err2);
+        }
+        log(`Login successful for user: ${user.username}`, "auth");
+        res.status(200).json(user);
+      });
+    })(req, res, next);
+  });
+  app2.post("/api/logout", (req, res, next) => {
+    const username = req.user?.username;
+    log(`Logout attempt for user: ${username}`, "auth");
+    req.logout((err) => {
+      if (err) {
+        log(`Logout error for user ${username}: ${err.message}`, "auth");
+        return next(err);
+      }
+      log(`Logout successful for user: ${username}`, "auth");
+      res.sendStatus(200);
+    });
+  });
+  app2.get("/api/user", (req, res) => {
+    if (!req.isAuthenticated()) {
+      log("Unauthenticated user session check", "auth");
+      return res.sendStatus(401);
+    }
+    log(`Session check successful for user: ${req.user.username}`, "auth");
+    res.json(req.user);
+  });
+  return {
+    requireAuth: (req, res, next) => {
+      if (!req.isAuthenticated()) {
+        log(`Unauthorized access attempt to ${req.path}`, "auth");
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      log(`Authorized access to ${req.path} by user: ${req.user.username}`, "auth");
+      next();
+    }
+  };
+}
+var scryptAsync;
+var init_auth = __esm({
+  "server/auth.ts"() {
+    "use strict";
+    init_storage();
+    init_vite();
+    scryptAsync = promisify(scrypt);
+  }
+});
+
+// shared/schema.ts
+import { z } from "zod";
+import { pgTable, text, serial, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+var users, insertUserSchema, services, insertServiceSchema, companyInfo, insertCompanyInfoSchema, contactSchema;
+var init_schema = __esm({
+  "shared/schema.ts"() {
+    "use strict";
+    users = pgTable("users", {
+      id: serial("id").primaryKey(),
+      username: text("username").notNull(),
+      password: text("password").notNull(),
+      createdAt: timestamp("created_at").defaultNow().notNull()
+    });
+    insertUserSchema = createInsertSchema(users, {
+      username: z.string().min(3, "Username must be at least 3 characters"),
+      password: z.string().min(6, "Password must be at least 6 characters")
+    }).omit({
+      id: true,
+      createdAt: true
+    });
+    services = pgTable("services", {
+      id: serial("id").primaryKey(),
+      title: text("title").notNull(),
+      description: text("description").notNull(),
+      icon: text("icon").notNull(),
+      // Lucide icon name
+      features: jsonb("features").notNull().$type()
+      // Array of feature points
+    });
+    insertServiceSchema = createInsertSchema(services, {
+      title: z.string().min(1, "Title is required"),
+      description: z.string().min(1, "Description is required"),
+      icon: z.string().min(1, "Icon is required"),
+      features: z.array(z.string()).min(1, "At least one feature is required")
+    }).omit({
+      id: true
+    });
+    companyInfo = pgTable("company_info", {
+      id: serial("id").primaryKey(),
+      mission: text("mission").notNull(),
+      vision: text("vision").notNull(),
+      about: text("about").notNull(),
+      teamMembers: jsonb("team_members").notNull().$type()
+    });
+    insertCompanyInfoSchema = createInsertSchema(companyInfo, {
+      mission: z.string().min(1, "Mission statement is required"),
+      vision: z.string().min(1, "Vision statement is required"),
+      about: z.string().min(1, "About description is required"),
+      teamMembers: z.array(z.object({
+        name: z.string().min(1, "Team member name is required"),
+        role: z.string().min(1, "Team member role is required"),
+        bio: z.string().min(1, "Team member bio is required"),
+        image: z.string().optional()
+      })).min(1, "At least one team member is required")
+    }).omit({
+      id: true
+    });
+    contactSchema = z.object({
+      name: z.string().min(1, "Name is required"),
+      email: z.string().email("Invalid email format"),
+      subject: z.string().min(1, "Subject is required"),
+      message: z.string().min(10, "Message must be at least 10 characters"),
+      type: z.enum(["general", "partnership", "investor", "support"], {
+        required_error: "Please select a contact type"
+      })
+    });
+  }
+});
+
+// server/routes.ts
+var routes_exports = {};
+__export(routes_exports, {
+  registerRoutes: () => registerRoutes
+});
+import { createServer } from "http";
+import { MailService } from "@sendgrid/mail";
+function registerRoutes(app2) {
+  const httpServer = createServer(app2);
+  const { requireAuth } = setupAuth(app2);
+  app2.get("/api/services", async (_req, res) => {
+    try {
+      const services2 = await storage.getServices();
+      res.json(services2);
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      res.status(500).json({ error: "Failed to fetch services" });
+    }
+  });
+  app2.get("/api/services/:id", async (req, res) => {
+    try {
+      const service = await storage.getService(parseInt(req.params.id));
+      if (!service) {
+        return res.status(404).json({ error: "Service not found" });
+      }
+      res.json(service);
+    } catch (error) {
+      console.error("Error fetching service:", error);
+      res.status(500).json({ error: "Failed to fetch service" });
+    }
+  });
+  app2.post("/api/services", requireAuth, async (req, res) => {
+    try {
+      const service = await storage.createService(req.body);
+      res.status(201).json(service);
+    } catch (error) {
+      console.error("Error creating service:", error);
+      res.status(500).json({ error: "Failed to create service" });
+    }
+  });
+  app2.put("/api/services/:id", requireAuth, async (req, res) => {
+    try {
+      const service = await storage.updateService(parseInt(req.params.id), req.body);
+      if (!service) {
+        return res.status(404).json({ error: "Service not found" });
+      }
+      res.json(service);
+    } catch (error) {
+      console.error("Error updating service:", error);
+      res.status(500).json({ error: "Failed to update service" });
+    }
+  });
+  app2.delete("/api/services/:id", requireAuth, async (req, res) => {
+    try {
+      const success = await storage.deleteService(parseInt(req.params.id));
+      if (!success) {
+        return res.status(404).json({ error: "Service not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting service:", error);
+      res.status(500).json({ error: "Failed to delete service" });
+    }
+  });
+  app2.get("/api/company-info", async (_req, res) => {
+    try {
+      const info = await storage.getCompanyInfo();
+      if (!info) {
+        return res.status(404).json({ error: "Company info not found" });
+      }
+      res.json(info);
+    } catch (error) {
+      console.error("Error fetching company info:", error);
+      res.status(500).json({ error: "Failed to fetch company info" });
+    }
+  });
+  app2.put("/api/company-info", requireAuth, async (req, res) => {
+    try {
+      const info = await storage.updateCompanyInfo(req.body);
+      res.json(info);
+    } catch (error) {
+      console.error("Error updating company info:", error);
+      res.status(500).json({ error: "Failed to update company info" });
+    }
+  });
+  app2.post("/api/contact", async (req, res) => {
+    try {
+      const contactData = contactSchema.parse(req.body);
+      if (!process.env.SENDGRID_API_KEY) {
+        throw new Error("SENDGRID_API_KEY environment variable is not set");
+      }
+      const mailService = new MailService();
+      mailService.setApiKey(process.env.SENDGRID_API_KEY);
+      await mailService.send({
+        to: process.env.CONTACT_EMAIL || "contact@bamikavision.com",
+        from: process.env.SENDGRID_FROM_EMAIL || "noreply@bamikavision.com",
+        subject: `[${contactData.type}] ${contactData.subject}`,
+        text: `
+Name: ${contactData.name}
+Email: ${contactData.email}
+Type: ${contactData.type}
+Subject: ${contactData.subject}
+
+Message:
+${contactData.message}
+        `,
+        html: `
+<h2>New Contact Form Submission</h2>
+<p><strong>Name:</strong> ${contactData.name}</p>
+<p><strong>Email:</strong> ${contactData.email}</p>
+<p><strong>Type:</strong> ${contactData.type}</p>
+<p><strong>Subject:</strong> ${contactData.subject}</p>
+<p><strong>Message:</strong></p>
+<p>${contactData.message.replace(/\n/g, "<br>")}</p>
+        `
+      });
+      res.status(200).json({ message: "Message sent successfully" });
+    } catch (error) {
+      console.error("Error processing contact form:", error);
+      res.status(400).json({ error: "Failed to process contact form" });
+    }
+  });
+  return httpServer;
+}
+var init_routes = __esm({
+  "server/routes.ts"() {
+    "use strict";
+    init_storage();
+    init_auth();
+    init_schema();
+  }
+});
+
+// server/index.ts
+init_vite();
+import express2 from "express";
+import path3 from "path";
+import { fileURLToPath as fileURLToPath3 } from "url";
+var __filename3 = fileURLToPath3(import.meta.url);
+var __dirname3 = path3.dirname(__filename3);
+var { registerRoutes: registerRoutes2 } = await Promise.resolve().then(() => (init_routes(), routes_exports));
+var app = express2();
+app.use(express2.json());
+app.use(express2.urlencoded({ extended: false }));
+app.set("trust proxy", 1);
+app.use((req, _res, next) => {
+  log(`${req.method} ${req.url}`, "request");
+  next();
+});
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    "http://localhost:5000",
+    "https://localhost:5000",
+    "https://bamikavision.com",
+    "https://www.bamikavision.com",
+    "https://bamika-vision.vercel.app"
+  ];
+  const origin = req.headers.origin;
+  if (origin && (process.env.NODE_ENV !== "production" || allowedOrigins.includes(origin))) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    log(`CORS allowed for origin: ${origin}`, "cors");
+  }
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, X-Requested-With, Cache-Control");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Max-Age", "86400");
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  if (req.method === "OPTIONS") {
+    log("Responding to CORS preflight request", "cors");
+    return res.status(200).end();
+  }
+  next();
+});
+(async () => {
+  try {
+    log("Starting server initialization...", "startup");
+    const server = registerRoutes2(app);
+    app.use((err, req, res, _next) => {
+      const errorDetails = {
+        message: err.message,
+        stack: err.stack,
+        status: err.status || err.statusCode || 500,
+        path: req.path,
+        method: req.method,
+        query: req.query,
+        body: req.body,
+        headers: req.headers
+      };
+      console.error("Server Error:", JSON.stringify(errorDetails, null, 2));
+      res.status(errorDetails.status).json({
+        success: false,
+        message: process.env.NODE_ENV === "production" ? "An unexpected error occurred" : err.message,
+        code: err.code
+      });
+    });
+    if (process.env.NODE_ENV === "production") {
+      log("Setting up production static file serving...", "startup");
+      const clientDir = path3.join(__dirname3, "../client");
+      const publicDir = path3.join(__dirname3, "../public");
+      log(`Setting up static directories...`, "startup");
+      log(`Client directory: ${clientDir}`, "startup");
+      log(`Public directory: ${publicDir}`, "startup");
+      app.use(express2.static(clientDir));
+      app.use(express2.static(publicDir));
+      app.get("*", (req, res, next) => {
+        if (req.path.startsWith("/api/")) {
+          log(`API request: ${req.path}`, "request");
+          return next();
+        }
+        log(`Non-API request, serving index.html for path: ${req.path}`, "request");
+        const clientIndex = path3.join(clientDir, "index.html");
+        const publicIndex = path3.join(publicDir, "index.html");
+        if (__require("fs").existsSync(clientIndex)) {
+          log(`Serving index.html from client directory`, "request");
+          res.sendFile(clientIndex);
+        } else if (__require("fs").existsSync(publicIndex)) {
+          log(`Serving index.html from public directory`, "request");
+          res.sendFile(publicIndex);
+        } else {
+          log(`Error: index.html not found in either directory`, "error");
+          res.status(404).send("Not found");
+        }
+      });
+    } else {
+      log("Setting up Vite development middleware...", "startup");
+      await setupVite(app, server);
+    }
+    const PORT = parseInt(process.env.PORT || "5000", 10);
+    server.listen(PORT, "0.0.0.0", () => {
+      log(`Server running on port ${PORT} in ${process.env.NODE_ENV || "development"} mode`, "startup");
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
+})();
