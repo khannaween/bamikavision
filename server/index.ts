@@ -29,7 +29,7 @@ app.use((req, res, next) => {
     'https://localhost:5000',
     'https://bamikavision.com',
     'https://www.bamikavision.com',
-    'https://bamika-vision.vercel.app' // Add Vercel domain
+    'https://bamika-vision.vercel.app'
   ];
 
   const origin = req.headers.origin;
@@ -81,7 +81,15 @@ app.use((req, res, next) => {
 
     if (process.env.NODE_ENV === "production") {
       log('Setting up production static file serving...', 'startup');
-      serveStatic(app);
+      app.use(express.static(path.join(__dirname, '../public')));
+
+      // Serve index.html for all non-API routes in production
+      app.get('*', (req, res, next) => {
+        if (req.path.startsWith('/api/')) {
+          return next();
+        }
+        res.sendFile(path.join(__dirname, '../public/index.html'));
+      });
     } else {
       log('Setting up Vite development middleware...', 'startup');
       await setupVite(app, server);
