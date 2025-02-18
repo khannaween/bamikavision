@@ -82,19 +82,41 @@ app.use((req, res, next) => {
     if (process.env.NODE_ENV === "production") {
       log('Setting up production static file serving...', 'startup');
 
-      // Serve static files from the dist/public directory in production
-      const staticPath = path.join(__dirname, '../public');
-      log(`Serving static files from: ${staticPath}`, 'startup');
-      app.use(express.static(staticPath));
+      // In production, serve static files from dist/client directory
+      const clientDir = path.join(__dirname, '../client');
+      const publicDir = path.join(__dirname, '../public');
+
+      log(`Setting up static directories...`, 'startup');
+      log(`Client directory: ${clientDir}`, 'startup');
+      log(`Public directory: ${publicDir}`, 'startup');
+
+      // Serve static files from both directories
+      app.use(express.static(clientDir));
+      app.use(express.static(publicDir));
 
       // Handle all non-API routes by serving index.html
       app.get('*', (req, res, next) => {
         if (req.path.startsWith('/api/')) {
+          log(`API request: ${req.path}`, 'request');
           return next();
         }
-        const indexPath = path.join(__dirname, '../public/index.html');
-        log(`Serving index.html for path: ${req.path}`, 'startup');
-        res.sendFile(indexPath);
+
+        log(`Non-API request, serving index.html for path: ${req.path}`, 'request');
+
+        // Try serving index.html from client directory first, then public
+        const clientIndex = path.join(clientDir, 'index.html');
+        const publicIndex = path.join(publicDir, 'index.html');
+
+        if (require('fs').existsSync(clientIndex)) {
+          log(`Serving index.html from client directory`, 'request');
+          res.sendFile(clientIndex);
+        } else if (require('fs').existsSync(publicIndex)) {
+          log(`Serving index.html from public directory`, 'request');
+          res.sendFile(publicIndex);
+        } else {
+          log(`Error: index.html not found in either directory`, 'error');
+          res.status(404).send('Not found');
+        }
       });
     } else {
       log('Setting up Vite development middleware...', 'startup');
