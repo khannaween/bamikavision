@@ -20,6 +20,7 @@
     "jsx": "react-jsx",
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
-    "allowJs": true
+    "allowJs": true,
+    "rootDir": "."
   }
 }
