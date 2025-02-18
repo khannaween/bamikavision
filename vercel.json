@@ -13,16 +13,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "dist/server/index.js",
-      "headers": {
-        "Access-Control-Allow-Credentials": "true",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
-        "Access-Control-Allow-Headers": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization, Cache-Control",
-        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-        "Cache-Control": "no-store, no-cache, must-revalidate",
-        "Pragma": "no-cache"
-      }
+      "dest": "dist/server/index.js"
     },
     {
       "src": "/static/(.*)",
@@ -33,27 +24,14 @@
     },
     {
       "src": "/(.*)\\.(.+)$",
-      "dest": "dist/public/$1.$2",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
+      "dest": "dist/public/$1.$2"
     },
     {
       "src": "/(.*)",
-      "dest": "dist/server/index.js",
-      "headers": {
-        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-        "Cache-Control": "no-store, no-cache, must-revalidate",
-        "Pragma": "no-cache"
-      }
+      "dest": "dist/server/index.js"
     }
   ],
   "env": {
-    "NODE_ENV": "production",
-    "SESSION_SECRET": "@session-secret",
-    "SENDGRID_API_KEY": "@sendgrid-api-key",
-    "SENDGRID_FROM_EMAIL": "@sendgrid-from-email",
-    "CONTACT_EMAIL": "@contact-email",
-    "DATABASE_URL": "@database-url"
+    "NODE_ENV": "production"
   }
 }
