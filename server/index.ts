@@ -81,17 +81,20 @@ app.use((req, res, next) => {
 
     if (process.env.NODE_ENV === "production") {
       log('Setting up production static file serving...', 'startup');
-      // Serve static files from the public directory
-      app.use(express.static(path.join(__dirname, '../public')));
 
-      // Handle all other routes by serving index.html
+      // Serve static files from the dist/public directory in production
+      const staticPath = path.join(__dirname, '../public');
+      log(`Serving static files from: ${staticPath}`, 'startup');
+      app.use(express.static(staticPath));
+
+      // Handle all non-API routes by serving index.html
       app.get('*', (req, res, next) => {
-        // Skip API routes
         if (req.path.startsWith('/api/')) {
           return next();
         }
-        // Send the index.html for client-side routing
-        res.sendFile(path.join(__dirname, '../public/index.html'));
+        const indexPath = path.join(__dirname, '../public/index.html');
+        log(`Serving index.html for path: ${req.path}`, 'startup');
+        res.sendFile(indexPath);
       });
     } else {
       log('Setting up Vite development middleware...', 'startup');
