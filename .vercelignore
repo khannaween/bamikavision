@@ -1,0 +1,10 @@
+attached_assets
+node_modules
+.git
+.config
+.replit
+.cache
+.upm
+.env*
+.vercel
+*.log

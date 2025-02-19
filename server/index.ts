@@ -1,7 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import path from "path";
 import { fileURLToPath } from "url";
-import { setupVite, serveStatic, log } from "./vite.js";
+import { setupVite, log } from "./vite.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -81,17 +81,11 @@ app.use((req, res, next) => {
 
     if (process.env.NODE_ENV === "production") {
       log('Setting up production static file serving...', 'startup');
-
       const publicDir = path.join(__dirname, '../public');
-      log(`Serving static files from: ${publicDir}`, 'startup');
 
-      // Serve static files with appropriate caching
-      app.use('/assets', express.static(path.join(publicDir, 'assets'), {
-        maxAge: '1y',
-        immutable: true
-      }));
-
+      // Serve static files with cache control
       app.use(express.static(publicDir, {
+        maxAge: '1y',
         index: false // Don't automatically serve index.html
       }));
 
