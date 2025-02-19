@@ -82,26 +82,36 @@ app.use((req, res, next) => {
     if (process.env.NODE_ENV === "production") {
       log('Setting up production static file serving...', 'startup');
       const publicDir = path.join(__dirname, '../public');
+      log(`Public directory path: ${publicDir}`, 'startup');
 
-      // Serve static files with cache control
-      app.use(express.static(publicDir, {
+      // Serve static assets with caching
+      app.use('/assets', express.static(path.join(publicDir, 'assets'), {
         maxAge: '1y',
-        index: false // Don't automatically serve index.html
+        immutable: true,
+        etag: true
       }));
 
-      // Handle all non-API routes by serving index.html
+      // Serve other static files
+      app.use(express.static(publicDir, {
+        etag: true,
+        lastModified: true
+      }));
+
+      // SPA fallback - serve index.html for all non-API routes
       app.get('*', (req, res, next) => {
         if (req.path.startsWith('/api/')) {
+          log(`API request: ${req.path}`, 'request');
           return next();
         }
 
         const indexPath = path.join(publicDir, 'index.html');
-        if (require('fs').existsSync(indexPath)) {
-          res.sendFile(indexPath);
-        } else {
-          log(`Error: index.html not found at ${indexPath}`, 'error');
-          res.status(404).send('Not found');
-        }
+        log(`Serving index.html for path: ${req.path}`, 'request');
+        res.sendFile(indexPath, (err) => {
+          if (err) {
+            log(`Error serving index.html: ${err.message}`, 'error');
+            res.status(500).send('Error loading page');
+          }
+        });
       });
     } else {
       log('Setting up Vite development middleware...', 'startup');
