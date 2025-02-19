@@ -94,7 +94,8 @@ app.use((req, res, next) => {
       // Serve other static files
       app.use(express.static(publicDir, {
         etag: true,
-        lastModified: true
+        lastModified: true,
+        index: false // Don't automatically serve index.html
       }));
 
       // SPA fallback - serve index.html for all non-API routes
